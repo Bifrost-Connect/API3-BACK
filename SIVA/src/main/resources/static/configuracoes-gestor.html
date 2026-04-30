@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bifrost Connect - Configurações do Técnico</title>
+    <title>Bifrost Connect - Configurações do Gestor</title>
     <link rel="stylesheet" href="css/configuracoes.css">
 </head>
 
-<body class="pagina-configuracoes" data-role="tecnico">
+<body class="pagina-configuracoes" data-role="gestor">
     <div class="top-bar">
         <div class="left">
             <button id="btnmenu">
@@ -26,7 +26,7 @@
     <main class="config-container">
         <section class="config-header">
             <h1>Configurações da conta</h1>
-            <p>Altere e atualize seus dados de acesso, contato e categoria de CNH.</p>
+            <p>Atualize seu e-mail, senha, telefone, foto e categoria de CNH.</p>
         </section>
 
         <section class="config-card">
@@ -36,8 +36,8 @@
                     <span id="avatarPlaceholder">Sem foto</span>
                 </div>
                 <div class="perfil-info">
-                    <strong id="perfilNome">Técnico</strong>
-                    <span class="perfil-role">Técnico</span>
+                    <strong id="perfilNome">Gestor</strong>
+                    <span class="perfil-role">Gestor</span>
                 </div>
             </aside>
 
@@ -80,7 +80,7 @@
 
                 <div class="botoes-actions">
                     <button type="submit" class="btn-aceitar">Salvar alterações</button>
-                    <button type="button" class="btn-voltar" onclick="window.location.href='telainicial.html'">Voltar</button>
+                    <button type="button" class="btn-voltar" onclick="window.location.href='telainicial-gestor.html'">Voltar</button>
                 </div>
             </form>
         </section>
@@ -90,13 +90,18 @@
 
     <div id="sidebar" class="sidebar">
         <button id="btnx" class="close-btn">×</button>
-        <a href="telainicial.html">TELA INICIAL</a>
-        <a href="chamados.html">CHAMADOS</a>
-        <a href="#">DÚVIDAS</a>
-        <a href="configuracoes-tecnico.html">CONFIGURAÇÕES</a>
+        <a href="telainicial-gestor.html">TELA INICIAL</a>
+        <a href="relatorios.html">RELATÓRIOS</a>
+        <a href="tecnicos-gestor.html">TÉCNICOS</a>
+        <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+        <a href="cadastrousuarios.html">CADASTRO DE USUÁRIOS</a>
+        <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
+        <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
     </div>
 
-    <script src="js/script.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
 </body>
+</html>
 
 </html>

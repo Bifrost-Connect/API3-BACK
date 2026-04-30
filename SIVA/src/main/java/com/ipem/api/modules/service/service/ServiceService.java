@@ -79,7 +79,6 @@ public class ServiceService {
 
             String monthLabel = yearMonth.format(monthNameFormatter);
             boolean isCurrentMonth = yearMonth.equals(YearMonth.now());
-
             String status = isCurrentMonth
                     ? openCalls > 0
                     ? String.format("O mês de %s ainda não foi fechado", monthLabel)
@@ -89,21 +88,11 @@ public class ServiceService {
                     : String.format("Mês de %s fechado", monthLabel);
 
             var entries = new ArrayList<ServiceReportEntryDTO>();
-
             for (var service : services) {
                 String departureTime = service.getDepartureTime() != null ? formatter.format(service.getDepartureTime()) : "";
                 String arrivalTime = service.getArrivalTime() != null ? formatter.format(service.getArrivalTime()) : "";
                 String completionTime = service.getCompletionTime() != null ? formatter.format(service.getCompletionTime()) : "";
-
-
-                String statusLabel;
-                if (service.getCompletionTime() != null) {
-                    statusLabel = "Finalizado";
-                } else if (service.getDepartureTime() != null) {
-                    statusLabel = "Em andamento";
-                } else {
-                    statusLabel = "Aberto";
-                }
+                String statusLabel = service.getCompletionTime() != null ? "Finalizado" : "Aberto";
 
                 entries.add(new ServiceReportEntryDTO(
                         service.getId(),
