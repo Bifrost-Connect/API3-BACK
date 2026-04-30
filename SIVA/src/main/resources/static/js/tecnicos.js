@@ -44,6 +44,26 @@ const tecnicosSample = [
 let tecnicosAtuais = [...tecnicosSample];
 let tecnicoEditandoId = null;
 
+//Back -> Front
+function traduzirStatus(statusBackend) {
+    switch (statusBackend) {
+        case "AVAILABLE": return "Ativo";
+        case "ON_DUTY": return "Ativo";
+        case "DISMISSED": return "Inativo";
+        default: return "Ativo";
+    }
+}
+
+// Front -> Back
+function traduzirStatusParaBackend(statusFrontend) {
+    switch (statusFrontend) {
+        case "Ativo": return "AVAILABLE";
+        case "Inativo": return "DISMISSED";
+        case "Suspenso": return "DISMISSED";
+        default: return "AVAILABLE";
+    }
+}
+
 function renderizarTecnicos(lista) {
     const corpo = document.getElementById("tecnicosTabelaCorpo");
     if (!corpo) return;
@@ -66,7 +86,7 @@ function renderizarTecnicos(lista) {
                 <td>${tecnico.setor}</td>
                 <td>${tecnico.perfil}</td>
                 <td><span class="status-badge status-${tecnico.status}">${tecnico.status}</span></td>
-                <td><button class="btn-tecnico-editar" type="button" onclick="abrirEditarTecnico(${tecnico.id})">Editar</button></td>
+                <td><button class="btn-tecnico-editar" type="button" onclick="abrirEditarTecnico('${tecnico.id}')">Editar</button></td>
             </tr>
         `;
     }).join("");
@@ -82,7 +102,7 @@ function aplicarFiltroTecnicos() {
             tecnico.setor,
             tecnico.perfil,
             tecnico.status
-        ].some(valor => valor.toLowerCase().includes(termo));
+        ].some(valor => (valor || "").toLowerCase().includes(termo));
     });
     renderizarTecnicos(filtrados);
 }
@@ -95,7 +115,7 @@ function limparFiltroTecnicos() {
 
 function abrirEditarTecnico(id) {
     tecnicoEditandoId = id;
-    const tecnico = tecnicosAtuais.find(item => item.id === id);
+    const tecnico = tecnicosAtuais.find(item => item.id == id);
     if (!tecnico) return;
 
     document.getElementById("editarNome").value = tecnico.name;
@@ -129,24 +149,57 @@ function salvarAlteracoesTecnico() {
         return;
     }
 
-    const tecnicoIndex = tecnicosAtuais.findIndex(item => item.id === tecnicoEditandoId);
-    if (tecnicoIndex === -1) return;
+    //Update no back
+    fetch(`http://localhost:8080/user/${tecnicoEditandoId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: nome,
+            email: email,
+            registration: matricula,
+            phone: telefone,
+            employeeStatus: traduzirStatusParaBackend(status)
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+    })
+    .then(() => {
+        carregarTecnicosBackend();
+        fecharPopupEditarTecnico();
+    })
+    .catch(() => {
+        alert("Erro ao atualizar técnico");
+    });
+}
 
-    tecnicosAtuais[tecnicoIndex] = {
-        ...tecnicosAtuais[tecnicoIndex],
-        name: nome,
-        email,
-        registration: matricula,
-        phone: telefone,
-        setor,
-        perfil,
-        status
-    };
+//Get no back
+function carregarTecnicosBackend() {
+    fetch("http://localhost:8080/user/tecnicos")
+        .then(response => response.json())
+        .then(data => {
 
-    renderizarTecnicos(tecnicosAtuais);
-    fecharPopupEditarTecnico();
+            tecnicosAtuais = data.map(user => ({
+                id: user.registration,
+                name: user.name,
+                email: user.email,
+                registration: user.registration,
+                phone: user.phone || "",
+                setor: "",
+                perfil: "",
+                status: traduzirStatus(user.employeeStatus)
+            }));
+
+            renderizarTecnicos(tecnicosAtuais);
+        })
+        .catch(() => {
+            renderizarTecnicos(tecnicosAtuais);
+        });
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    renderizarTecnicos(tecnicosAtuais);
+    carregarTecnicosBackend();
 });
