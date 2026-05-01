@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bifrost Connect - Histórico de Auditoria</title>
+    <link rel="stylesheet" href="css/historicochamados.css" />
+  </head>
+  <body class="pagina-historico">
+    <div class="top-bar">
+      <div class="left">
+        <button id="btnmenu">
+          <img src="img/menu.png" alt="icone menu" />
+        </button>
+        <span class="titulo">Histórico de Auditoria de Chamados</span>
+      </div>
+      <div class="logout">
+        <button id="btnlogout" onclick="btnlogout()">
+          <img src="img/logout.png" alt="icone logout" />
+        </button>
+      </div>
+    </div>
+
+    <section class="historico-dashboard">
+      <div class="historico-dashboard-topo">
+        <div>
+          <h1>Painel de auditoria</h1>
+          <p>
+            Acompanhe o histórico completo de modificações e encerramentos de
+            chamados (Powered by Hibernate Envers).
+          </p>
+        </div>
+      </div>
+
+      <div class="historico-kpis">
+        <article class="historico-kpi">
+          <span>Total de Registros</span>
+          <strong id="kpi-total">...</strong>
+          <small>Modificações auditadas</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Finalizados</span>
+          <strong id="kpi-finalizados">...</strong>
+          <small>Chamados com data de conclusão</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Em andamento</span>
+          <strong id="kpi-andamento">...</strong>
+          <small>Atendimentos em campo</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Novos Registros</span>
+          <strong id="kpi-novos">...</strong>
+          <small>Aberturas recentes</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="painel-historico">
+      <div class="painel-historico-topo">
+        <div>
+          <h2>Lista de Eventos Registrados</h2>
+        </div>
+      </div>
+
+      <div class="historico-busca-panel">
+        <span class="historico-busca-label"
+          >Buscar chamado por Prefixo, Matrícula ou Nome do Técnico</span
+        >
+        <div class="historico-busca-input">
+          <input
+            id="filtroBusca"
+            type="text"
+            placeholder="Digite prefixo, nome ou matrícula"
+            oninput="aplicarFiltrosHistorico()"
+          />
+        </div>
+      </div>
+
+      <div class="historico-lista" id="historicoLista">
+        <div class="nenhum-registro">Carregando dados da API...</div>
+      </div>
+    </section>
+
+    <div id="popupChamadoDetalhes" class="sobreposicao" style="display: none">
+      <div class="popup-card">
+        <button class="popup-close" onclick="fecharPopupChamadoDetalhes()">
+          &times;
+        </button>
+        <h2 class="popup-titulo" id="popupDetalhesTitulo">
+          Detalhes da Auditoria
+        </h2>
+        <div class="popup-conteudo" id="popupDetalhesConteudo"></div>
+        <button
+          type="button"
+          class="btn-acao-filtrar"
+          onclick="fecharPopupChamadoDetalhes()"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+
+    <div id="overlayBlurSidebar" class="overlay-blur-sidebar"></div>
+    <div id="sidebar" class="sidebar">
+      <button id="btnx" class="close-btn">&times;</button>
+      <a href="telainicial-gestor.html">TELA INICIAL</a>
+      <a href="relatorios.html">RELATÓRIOS</a>
+      <a href="tecnicos-gestor.html">TÉCNICOS</a>
+      <a href="cadastrousuarios.html">CADASTRO DE USUÁRIOS</a>
+      <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+      <a href="#">DÚVIDAS</a>
+      <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+    </div>
+
+    <script src="js/basic.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/historico.js"></script>
+  </body>
+</html>
