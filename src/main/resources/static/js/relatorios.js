@@ -1,3 +1,4 @@
+
 let relatoriosDoBanco = [];
 let selectedReportIndex = 0;
 
@@ -9,15 +10,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
 async function carregarRelatoriosDaAPI() {
     try {
-        const response = await apiFetch("/service/reports", {
+        const response = await fetch("http://localhost:8080/service/reports", {
             method: "GET"
+            // Sem header de Authorization por enquanto, conforme acordado
         });
 
-        if (response && response.ok) {
+        if (response.ok) {
             relatoriosDoBanco = await response.json();
             inicializarRelatorios();
         } else {
-            console.error("Erro ao buscar relatórios. Status:", response?.status);
+            console.error("Erro ao buscar relatórios. Status:", response.status);
             mostrarErroNaTabela("Falha ao carregar os dados do servidor.");
         }
     } catch (error) {
@@ -35,6 +37,7 @@ function inicializarRelatorios() {
     }
 
     renderizarMeses();
+    // Seleciona sempre o primeiro mês retornado pela API por padrão
     selecionarRelatorio(0);
 }
 
@@ -67,6 +70,7 @@ function selecionarRelatorio(index) {
 }
 
 function mostrarStatus(text) {
+    // Seleciona o primeiro 'strong' dentro do primeiro 'article' dos KPIs
     const statusElement = document.querySelector(".relatorios-kpis article:nth-child(1) strong");
     if (statusElement) statusElement.textContent = text;
 }
@@ -94,7 +98,7 @@ function atualizarTabela(entries) {
     entries.forEach(entry => {
         const row = document.createElement("tr");
 
-        let statusClass = "status-indicar";
+        let statusClass = "status-indicar"; // Laranja/Aberto por padrão
         if (entry.status === "Finalizado") statusClass = "status-finalizado"; // Verde
         else if (entry.status === "Em andamento") statusClass = "status-andamento"; // Azul
 
@@ -118,6 +122,38 @@ function mostrarErroNaTabela(mensagem) {
     }
 }
 
-window.exportCsvForSelectedMonth = function () {
-    alert("Exportação habilitada para uma futura integração.");
+window.exportCsvForSelectedMonth = function() {
+    mostrarToast1("Exportação habilitada para uma futura integração.");
+}
+
+//Função para mostrar o Toast
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+}
+
+//Função para mostrar o Toast
+function mostrarToast1(mensagem) {
+    const toast = document.getElementById("toast-aviso1");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
 }

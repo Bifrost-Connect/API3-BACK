@@ -1,70 +1,112 @@
+// --- CHECK-IN (Ao clicar em Salvar na tela inicial após escolher o carro) ---
 window.salvarVeiculoInfo = async function() {
     const kmInput = document.getElementById("quilometragem-inicial")?.value;
     const obsInput = document.getElementById("observacoes")?.value;
-    const destinoInput = document.getElementById("destino-requisitante")?.value || "Não informado";
-
     const matricula = localStorage.getItem("userRegistration");
     const vehicle = JSON.parse(localStorage.getItem('selectedVehicle'));
 
     if (!vehicle || !matricula) {
-        alert("Erro: Matrícula do usuário ou veículo não encontrados.");
+        mostrarToast("Erro: Matrícula do usuário ou veículo não encontrados.");
         return;
     }
 
     try {
-        const response = await apiFetch("/service/start", {
+        const response = await fetch("http://localhost:8080/service/start", {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 carPrefix: vehicle.prefix,
                 userRegistration: matricula,
                 recordKm: parseFloat(kmInput),
-                note: obsInput,
-                destinationRequester: destinoInput,
-                priority: "MEDIUM"
+                note: obsInput
             })
         });
 
-        if (response && response.ok) {
+        if (response.ok) {
             const data = await response.json();
-            localStorage.setItem("activeServiceId", data.id || data.serviceId);
+            // Salva o ID do serviço rodando para podermos fazer o check-out depois
+            localStorage.setItem("activeServiceId", data.serviceId);
             localStorage.setItem("km", kmInput);
             localStorage.setItem("obs", obsInput);
-            alert("Check-in confirmado no sistema!");
+            mostrarToast1("Check-in confirmado no sistema!");
         } else {
-            alert("Erro ao realizar check-in no banco.");
+            mostrarToast("Erro ao realizar check-in no banco.");
         }
     } catch (error) {
         console.error("Erro na API:", error);
     }
 };
 
+
+// --- CHECK-OUT ---
 window.checkoutChamado = async () => {
     const serviceId = localStorage.getItem("activeServiceId");
-    const kmFinalValue = document.getElementById("quilometragem-inicial")?.value;
+
+    // Pega o valor atual do input de KM para ser o KM de chegada
+    const kmFinal = document.getElementById("quilometragem-inicial")?.value;
 
     if (!serviceId) {
-        alert("Nenhum serviço ativo encontrado.");
+        mostrarToast("Nenhum serviço ativo encontrado para fazer check-out.");
         return;
     }
 
     try {
-        const response = await apiFetch(`/service/finalize/${serviceId}`, {
+        const response = await fetch(`http://localhost:8080/service/finalize/${serviceId}`, {
             method: "POST",
-            body: JSON.stringify({ kmFinal: parseFloat(kmFinalValue) })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({recordKm: parseFloat(kmFinal) })
         });
 
-        if (response && response.ok) {
+        if (response.ok) {
+            // Limpa o navegador
             localStorage.removeItem("selectedVehicle");
             localStorage.removeItem("km");
             localStorage.removeItem("obs");
             localStorage.removeItem("activeServiceId");
 
+            // Abre o modal de sucesso do HTML
             const modal = document.getElementById("modalAvisoCheckout");
             if (modal) modal.style.display = "flex";
         } else {
-            alert("Erro ao fazer o check-out no servidor.");
+            mostrarToast("Erro ao fazer o check-out no servidor.");
         }
     } catch (error) {
         console.error("Erro na API de Checkout:", error);
     }
 };
+
+window.finalizarCheckout = () => {
+    window.location.reload();
+};
+
+//Função para mostrar o Toast
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+}
+
+//Função para mostrar o Toast
+function mostrarToast1(mensagem) {
+    const toast = document.getElementById("toast-aviso1");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+}

@@ -1,16 +1,15 @@
-window.btnindex = async function () {
+// LOGIN COM REDIRECIONAMENTO POR PERFIL (ADMINISTRADOR VS TECNICO)
+window.btnindex = async function() {
     const registrationInput = document.getElementById("matricula")?.value;
     const passwordInput = document.getElementById("senha")?.value;
 
     if (!registrationInput || !passwordInput) {
-        alert("Por favor, preencha todos os campos.");
+        mostrarToast("Por favor, preencha todos os campos.");
         return;
     }
 
     try {
-        const apiUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : "http://localhost:8080";
-
-        const response = await apiFetch("/user/login", {
+        const response = await fetch("http://localhost:8080/user/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -19,51 +18,76 @@ window.btnindex = async function () {
             })
         });
 
-        if (response && response.ok) {
-            const data = await response.json();
+        if (response.ok) {
+            const user = await response.json();
+            const permission = user.permission ? user.permission.toUpperCase() : "";
 
-            const token = data.token;
-            if (token) {
-                localStorage.setItem(typeof CONFIG !== 'undefined' ? CONFIG.TOKEN_KEY : "auth_token", token);
-            }
-
-            let payload = null;
-            if (typeof CONFIG !== 'undefined' && CONFIG.decodeToken && token) {
-                payload = CONFIG.decodeToken(token);
-            }
-
-            const rawPermission = payload?.permission || data.permission || "TECHNICIAN";
-            const permission = String(rawPermission).toUpperCase().replace("ROLE_", "");
-            const name = payload?.name || data.name || "Usuário";
-
-            localStorage.setItem("userName", name);
+            localStorage.setItem("userName", user.name);
             localStorage.setItem("userPermission", permission);
-            localStorage.setItem("userRegistration", String(registrationInput));
 
             if (permission === "ADMINISTRATOR") {
                 window.location.href = "telainicial-gestor.html";
             } else if (permission === "TECHNICIAN") {
                 window.location.href = "telainicial.html";
             } else {
-                window.location.href = "telainicial.html";
+                mostrarToast("Perfil de acesso não reconhecido: " + user.permission);
             }
         } else {
-            alert("Matrícula ou senha incorretos.");
+            mostrarToast("Matrícula ou senha incorretos.");
         }
     } catch (error) {
         console.error("Login error:", error);
-        alert("Erro ao conectar com o servidor.");
+        mostrarToast("Erro ao conectar com o servidor.");
     }
 };
 
-window.togglePassword = function () {
+// LOGOUT
+window.btnlogout = () => {
+    localStorage.clear();
+    window.location.href = "index.html";
+};
+
+// VIZUALIZAR SENHA
+window.togglePassword = function() {
     const passwordField = document.getElementById("senha");
     const eyeLine = document.getElementById("eyeLine");
     if (passwordField.type === "password") {
         passwordField.type = "text";
-        if (eyeLine) eyeLine.style.display = "block";
+        if(eyeLine) eyeLine.style.display = "block";
     } else {
         passwordField.type = "password";
-        if (eyeLine) eyeLine.style.display = "none";
+        if(eyeLine) eyeLine.style.display = "none";
     }
 };
+
+//Função para mostrar o Toast
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+};
+
+//Enter
+document.addEventListener("DOMContentLoaded", () => {
+    const inputMatricula = document.getElementById("matricula");
+    const inputSenha = document.getElementById("senha");
+
+    function handleEnter(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            btnindex();
+        }
+    }
+
+    inputMatricula.addEventListener("keydown", handleEnter);
+    inputSenha.addEventListener("keydown", handleEnter);
+});

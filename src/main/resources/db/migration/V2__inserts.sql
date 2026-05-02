@@ -169,3 +169,8 @@ INSERT INTO refuelings (record_id, liters, price_per_liter, total_amount, fuel_t
 INSERT INTO incidents (service_id, incident_type, severity, location, request_support, description, resolved, resolved_at) VALUES 
 (7312, 'DEFECT', 'LOW', 'Rodovia Presidente Dutra, KM 145', FALSE, 'Luz amarela no painel, mas o veículo manteve o funcionamento normal.', TRUE, '2026-02-20 16:00:00');
 
+INSERT INTO records (id, service_id, record_type, record_date, record_km, note)
+VALUES (20, 7358, 'REFUELING', '2026-05-02 10:00:00', 5050.0, 'Abastecimento Maio');
+
+INSERT INTO refuelings (record_id, liters, price_per_liter, total_amount, fuel_type, gas_station_name, invoice)
+VALUES (20, 40.0, 5.95, 238.00, 'GASOLINE', 'Posto Shell SJC', 'NF-5001');

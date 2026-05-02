@@ -50,6 +50,14 @@ public class VehicleController {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
+    @GetMapping("/types")
+    public ResponseEntity<?> listCarTypes() {
+        try {
+            return ResponseEntity.ok(vehicleService.findAllActiveTypes());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @GetMapping("/service/current")
     public ResponseEntity<?> getCurrentService() {

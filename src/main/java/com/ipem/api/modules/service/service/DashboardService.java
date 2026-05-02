@@ -22,25 +22,23 @@ public class DashboardService {
     }
 
     public DashboardMetricsDTO getMetrics(){
-        Double monthlyFuelSpend = refuelingRepository.sumMonthlyFuelSpend();
-        Double averagePricePerLiter = refuelingRepository.avgMonthlyPricePerLiter();
-        Double totalLitersRefueled = refuelingRepository.sumMonthlyLiters();
+        double monthlyFuelSpend = refuelingRepository.sumMonthlyFuelSpend();
+        double averagePricePerLiter = refuelingRepository.avgMonthlyPricePerLiter();
+        double totalLitersRefueled = refuelingRepository.sumMonthlyLiters();
 
-        Long availableCars = carRepository.countByStatus(VehicleStatus.AVAILABLE);
-        Long maintenanceCars = carRepository.countByStatus(VehicleStatus.MAINTENANCE);
-        Long inUseCars = carRepository.countByStatus(VehicleStatus.IN_USE);
+        Long available = carRepository.countByStatus(VehicleStatus.AVAILABLE);
+        Long maintenance = carRepository.countByStatus(VehicleStatus.MAINTENANCE);
+        Long inUse = carRepository.countByStatus(VehicleStatus.IN_USE);
 
         return new DashboardMetricsDTO(
-                availableCars != null ? availableCars.intValue() : 0,
-                maintenanceCars != null ? maintenanceCars.intValue() : 0,
-                inUseCars != null ? inUseCars.intValue() : 0,
-
-                (int) userRepository.countTechniciansByStatus(EmployeeStatus.AVAILABLE),
-                (int) userRepository.countTechniciansByStatus(EmployeeStatus.ON_DUTY),
-
-                monthlyFuelSpend != null ? monthlyFuelSpend : 0.0,
-                averagePricePerLiter != null ? averagePricePerLiter : 0.0,
-                totalLitersRefueled != null ? totalLitersRefueled : 0.0
+                available != null ? available : 0L,
+                maintenance != null ? maintenance : 0L,
+                inUse != null ? inUse : 0L,
+                userRepository.countTechniciansByStatus(EmployeeStatus.AVAILABLE),
+                userRepository.countTechniciansByStatus(EmployeeStatus.ON_DUTY),
+                monthlyFuelSpend,
+                averagePricePerLiter,
+                totalLitersRefueled
         );
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -102,5 +103,13 @@ public class VehicleService {
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
         car.setIsActive(false);
         carRepository.save(car);
+    }
+
+    public List<CarType> findAllActiveTypes() {
+        try {
+            return carTypeRepository.findAll();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao buscar tipos de veículos: " + e.getMessage());
+        }
     }
 }
