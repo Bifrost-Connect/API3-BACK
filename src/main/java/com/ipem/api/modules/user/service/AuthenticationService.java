@@ -17,12 +17,12 @@ public class AuthenticationService implements UserDetailsService  {
 
     @Override
     public UserDetails loadUserByUsername(String registration) throws UsernameNotFoundException {
-        return (UserDetails) repository.findByRegistrationAndIsActiveTrue(registration)
-                .orElseThrow(() -> new UsernameNotFoundException("Registration not found or inactive: " + registration));
+        return (UserDetails) repository.findByRegistration(registration)
+                .orElseThrow(() -> new UsernameNotFoundException("Registration not found: " + registration));
     }
 
     public boolean authenticate(String registration, String password) {
-        return repository.findByRegistrationAndIsActiveTrue(registration)
+        return repository.findByRegistration(registration)
                 .map(user -> user.getPassword().equals(password))
                 .orElse(false);
     }

@@ -4,7 +4,7 @@ window.btnindex = async function() {
     const passwordInput = document.getElementById("senha")?.value;
 
     if (!registrationInput || !passwordInput) {
-        mostrarToast("Por favor, preencha todos os campos.");
+        alert("Por favor, preencha todos os campos.");
         return;
     }
 
@@ -30,14 +30,14 @@ window.btnindex = async function() {
             } else if (permission === "TECHNICIAN") {
                 window.location.href = "telainicial.html";
             } else {
-                mostrarToast("Perfil de acesso não reconhecido: " + user.permission);
+                alert("Perfil de acesso não reconhecido: " + user.permission);
             }
         } else {
-            mostrarToast("Matrícula ou senha incorretos.");
+            alert("Matrícula ou senha incorretos.");
         }
     } catch (error) {
         console.error("Login error:", error);
-        mostrarToast("Erro ao conectar com o servidor.");
+        alert("Erro ao conectar com o servidor.");
     }
 };
 
@@ -47,7 +47,7 @@ window.btnlogout = () => {
     window.location.href = "index.html";
 };
 
-// VIZUALIZAR SENHA
+// VISUALIZAR SENHA (OLHINHO)
 window.togglePassword = function() {
     const passwordField = document.getElementById("senha");
     const eyeLine = document.getElementById("eyeLine");
@@ -59,35 +59,3 @@ window.togglePassword = function() {
         if(eyeLine) eyeLine.style.display = "none";
     }
 };
-
-//Função para mostrar o Toast
-function mostrarToast(mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    }
-};
-
-//Enter
-document.addEventListener("DOMContentLoaded", () => {
-    const inputMatricula = document.getElementById("matricula");
-    const inputSenha = document.getElementById("senha");
-
-    function handleEnter(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            btnindex();
-        }
-    }
-
-    inputMatricula.addEventListener("keydown", handleEnter);
-    inputSenha.addEventListener("keydown", handleEnter);
-});

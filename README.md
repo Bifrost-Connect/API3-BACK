@@ -19,7 +19,7 @@ A API foi construída com foco em performance e integridade dos dados, utilizand
 ## Estrutura do Projeto
 
 - **`/src/main/java/com/siva/controller`**: Endpoints da API (Rotas de acesso).
-- **`/src/main/java/com/siva/attendance`**: Regras de negócio (Cálculos de manutenção, validações).
+- **`/src/main/java/com/siva/service`**: Regras de negócio (Cálculos de manutenção, validações).
 - **`/src/main/java/com/siva/repository`**: Camada de persistência (Queries Oracle/MySQL).
 - **`/src/main/java/com/siva/model`**: Entidades do banco de dados (Viatura, Motorista, Viagem).
 - **`/src/main/resources`**: Configurações de ambiente e conexões com o DB.

@@ -15,19 +15,24 @@ import java.time.ZoneOffset;
 @Service
 public class TokenService {
 
-    @Value("${api.security.token.secret:siva-secret-key-123}")
-    private String secret;
+    private final String secret;
+
+    public TokenService(@Value("${api.security.token.secret}") String secret) {
+        this.secret = secret;
+    }
+
+    private static final String ISSUER = "API IPEM-SIVA";
 
     public String generateToken(User user) {
         try {
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
-                    .withIssuer("SIVA-API")
-                    .withSubject(user.getRegistration())
-                    .withExpiresAt(dataExpiracao())
+                    .withIssuer(ISSUER)
+                    .withSubject(user.getEmail())
+                    .withExpiresAt(expirationDate())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Erro ao gerar token jwt", exception);
+            throw new RuntimeException("Error generating JWT token", exception);
         }
     }
 
@@ -35,16 +40,16 @@ public class TokenService {
         try {
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
-                    .withIssuer("SIVA-API")
+                    .withIssuer(ISSUER)
                     .build()
                     .verify(tokenJWT)
                     .getSubject();
         } catch (JWTVerificationException exception) {
-            return null;
+            throw new RuntimeException("Invalid or expired JWT token!");
         }
     }
 
-    private Instant dataExpiracao() {
+    private Instant expirationDate() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }

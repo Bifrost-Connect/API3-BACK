@@ -2,12 +2,9 @@ package com.ipem.api.modules.user.service;
 
 import com.ipem.api.modules.user.dto.RegisterDTO;
 import com.ipem.api.modules.user.model.User;
-import com.ipem.api.modules.user.model.enums.Permission;
 import com.ipem.api.modules.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class UserService {
@@ -32,20 +29,6 @@ public class UserService {
                 .permission(data.permission())
                 .build();
 
-        newUser.setIsActive(true);
-
         return repository.save(newUser);
-    }
-
-    public List<User> findAllByPermission(Permission permission) {
-        return repository.findByPermissionAndIsActiveTrue(permission);
-    }
-
-    @Transactional
-    public void deleteUser(String registration) {
-        User user = repository.findById(registration)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setIsActive(false);
-        repository.save(user);
     }
 }

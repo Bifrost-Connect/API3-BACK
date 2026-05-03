@@ -4,12 +4,10 @@ import com.ipem.api.infrastructure.models.BaseEntity;
 import com.ipem.api.modules.vehicle.model.enums.VehicleStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "cars")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-@SQLRestriction("is_active = true")
 public class Car extends BaseEntity {
     @Id
     private String prefix;
@@ -34,13 +32,4 @@ public class Car extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "vehicle_status")
     private VehicleStatus vehicleStatus;
-
-    @Column(name = "is_active", columnDefinition = "boolean default true")
-    private Boolean isActive = true;
-
-    private Float tankCapacity;
-    @Column(unique = true)
-    private String renavam;
-    @Column(unique = true)
-    private String chassi;
 }

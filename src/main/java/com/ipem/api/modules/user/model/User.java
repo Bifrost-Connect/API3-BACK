@@ -5,7 +5,6 @@ import com.ipem.api.modules.user.model.enums.Permission;
 import com.ipem.api.modules.user.model.enums.EmployeeStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,7 +21,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLRestriction("is_active = true")
 public class User extends BaseEntity implements UserDetails {
 
     @Id
@@ -71,7 +69,7 @@ public class User extends BaseEntity implements UserDetails {
     public String getPassword() { return password; }
 
     @Override
-    public String getUsername() {return this.registration;}
+    public String getUsername() { return email; }
 
     @Override
     public boolean isAccountNonExpired() { return true; }
@@ -84,10 +82,4 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() { return true; }
-
-    @Column(name = "is_active", columnDefinition = "boolean default true")
-    private Boolean isActive = true;
-
-    private String driverLicenseCategory;
-    private LocalDate driverLicenseExpiration;
 }

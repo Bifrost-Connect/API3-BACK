@@ -1,10 +1,7 @@
 package com.ipem.api.modules.vehicle.controller;
 
-import com.ipem.api.modules.vehicle.dto.CarUpdateDTO;
-import com.ipem.api.modules.vehicle.dto.FuelRequestDTO;
 import com.ipem.api.modules.vehicle.model.Car;
 import com.ipem.api.modules.vehicle.service.VehicleService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,45 +19,37 @@ public class VehicleController {
     }
 
     @PatchMapping("/{prefix}/update-data")
-    public ResponseEntity<?> updateData(@PathVariable String prefix, @RequestBody @Valid CarUpdateDTO data) {
+    public ResponseEntity<?> updateData(@PathVariable String prefix, @RequestBody Map<String, Object> data) {
         try {
-            vehicleService.updateKmAndObs(prefix.trim(), data.mileage(), data.observations());
-            return ResponseEntity.ok(Map.of("message", "Dados do veículo atualizados com sucesso!"));
+            // Logs de depuração para o seu console do IntelliJ
+            System.out.println(">>> Tentando atualizar veículo: " + prefix);
+
+            if (data.get("mileage") == null) {
+                return ResponseEntity.badRequest().body("{\"error\": \"Mileage field is required.\"}");
+            }
+
+            // Converte os dados do Map com segurança
+            Float mileage = Float.parseFloat(data.get("mileage").toString());
+            String observations = data.get("observations") != null ? data.get("observations").toString() : "";
+
+            // Chama o service (Certifique-se que o service usa o prefixo para dar o UPDATE)
+            vehicleService.updateKmAndObs(prefix.trim(), mileage, observations);
+
+            return ResponseEntity.ok().body("{\"message\": \"Data saved successfully!\"}");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            e.printStackTrace(); // Mostra o erro detalhado no console do Java
+            return ResponseEntity.status(500).body("{\"error\": \"Server error: " + e.getMessage() + "\"}");
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerCar(@RequestBody @Valid Car car) {
+    public ResponseEntity<?> registerCar(@RequestBody Car car) {
         try {
-            var newCar = vehicleService.register(car);
-            return ResponseEntity.ok(Map.of("message", "Veículo cadastrado com sucesso!", "prefix", newCar.getPrefix()));
+            vehicleService.register(car);
+            return ResponseEntity.ok().body("{\"message\": \"Vehicle registered successfully!\"}");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("{\"error\": \"Registration error: " + e.getMessage() + "\"}");
         }
-    }
-
-    @PostMapping("/{prefix}/fuel")
-    public ResponseEntity<?> registerFuel(@PathVariable String prefix, @RequestBody @Valid FuelRequestDTO data) {
-        try {
-            vehicleService.registerFuel(prefix, data.value(), data.date());
-            return ResponseEntity.ok(Map.of("message", "Abastecimento registrado com sucesso!"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
-    }
-    @GetMapping("/types")
-    public ResponseEntity<?> listCarTypes() {
-        try {
-            return ResponseEntity.ok(vehicleService.findAllActiveTypes());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/service/current")
-    public ResponseEntity<?> getCurrentService() {
-        return ResponseEntity.ok(vehicleService.getCurrentService());
     }
 }
