@@ -1,25 +1,24 @@
-
 let relatoriosDoBanco = [];
 let selectedReportIndex = 0;
 
 window.addEventListener("DOMContentLoaded", () => {
-    if (typeof carregarDadosTelaInicial === "function") carregarDadosTelaInicial();
-
+    // Garante que a interface do usuário seja atualizada se a função existir no ui.js
+    if (typeof carregarDadosTelaInicial === "function") {
+        carregarDadosTelaInicial();
+    }
     carregarRelatoriosDaAPI();
 });
 
 async function carregarRelatoriosDaAPI() {
     try {
-        const response = await fetch("http://localhost:8080/service/reports", {
-            method: "GET"
-            // Sem header de Authorization por enquanto, conforme acordado
-        });
+        // Utiliza o apiFetch (do basic.js) para garantir que a requisição vá com o Token JWT
+        const response = await apiFetch("/service/reports", { method: "GET" });
 
-        if (response.ok) {
+        if (response && response.ok) {
             relatoriosDoBanco = await response.json();
             inicializarRelatorios();
         } else {
-            console.error("Erro ao buscar relatórios. Status:", response.status);
+            console.error("Erro ao buscar relatórios. Status:", response?.status);
             mostrarErroNaTabela("Falha ao carregar os dados do servidor.");
         }
     } catch (error) {
@@ -31,7 +30,7 @@ async function carregarRelatoriosDaAPI() {
 function inicializarRelatorios() {
     if (!document.getElementById("months-list")) return;
 
-    if (relatoriosDoBanco.length === 0) {
+    if (!relatoriosDoBanco || relatoriosDoBanco.length === 0) {
         mostrarErroNaTabela("Nenhum relatório encontrado no banco de dados.");
         return;
     }
@@ -56,16 +55,19 @@ function renderizarMeses() {
 
 function selecionarRelatorio(index) {
     selectedReportIndex = index;
-    renderizarMeses();
+    renderizarMeses(); // Re-renderiza para atualizar a classe "active"
 
     const report = relatoriosDoBanco[selectedReportIndex];
     mostrarStatus(report.status);
     atualizarResumo(report.totalCalls, report.completedCalls, report.openCalls);
     atualizarTabela(report.entries);
 
+    // Altera o texto do botão de exportação dependendo se o mês fechou ou não
     const btnExport = document.querySelector(".btn-gerar");
     if (btnExport) {
         btnExport.textContent = report.isCurrentMonth ? "Gerar relatório parcial" : "Exportar CSV";
+        // Adiciona a chamada visual do Toast ao clicar no botão
+        btnExport.onclick = () => exportCsvForSelectedMonth();
     }
 }
 
@@ -87,7 +89,6 @@ function atualizarResumo(total, completed, open) {
 function atualizarTabela(entries) {
     const tbody = document.querySelector(".relatorios-table tbody");
     if (!tbody) return;
-
     tbody.innerHTML = "";
 
     if (!entries || entries.length === 0) {
@@ -99,8 +100,11 @@ function atualizarTabela(entries) {
         const row = document.createElement("tr");
 
         let statusClass = "status-indicar"; // Laranja/Aberto por padrão
-        if (entry.status === "Finalizado") statusClass = "status-finalizado"; // Verde
-        else if (entry.status === "Em andamento") statusClass = "status-andamento"; // Azul
+        if (entry.status === "Finalizado") {
+            statusClass = "status-finalizado"; // Verde
+        } else if (entry.status === "Em andamento") {
+            statusClass = "status-andamento"; // Azul
+        }
 
         row.innerHTML = `
             <td>${entry.id}</td>
@@ -122,38 +126,11 @@ function mostrarErroNaTabela(mensagem) {
     }
 }
 
-window.exportCsvForSelectedMonth = function() {
-    mostrarToast1("Exportação habilitada para uma futura integração.");
-}
-
-//Função para mostrar o Toast
-function mostrarToast(mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
+window.exportCsvForSelectedMonth = function () {
+    // Usa o Toast visual de sucesso já presente no seu sistema
+    if (typeof mostrarToast1 === "function") {
+        mostrarToast1("Exportação habilitada para uma futura integração.");
+    } else {
+        alert("Exportação habilitada para uma futura integração.");
     }
-}
-
-//Função para mostrar o Toast
-function mostrarToast1(mensagem) {
-    const toast = document.getElementById("toast-aviso1");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    }
-}
+};

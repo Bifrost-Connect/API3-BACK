@@ -7,6 +7,7 @@ import com.ipem.api.modules.service.service.DashboardService;
 import com.ipem.api.modules.service.service.AttendanceService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -88,6 +89,32 @@ public class AttendanceController {
             return ResponseEntity.internalServerError().body(
                     Map.of("error", "Erro ao buscar histórico de auditoria: " + e.getMessage())
             );
+        }
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<?> getActiveService() {
+        try {
+            String registration = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            var attendance = attendanceService.findActiveServiceByUser(registration);
+
+            if (attendance != null) {
+                return ResponseEntity.ok(Map.of(
+                        "active", true,
+                        "serviceId", attendance.getId(),
+                        "carPrefix", attendance.getCar().getPrefix(),
+                        "model", attendance.getCar().getType().getModel(),
+                        "licensePlate", attendance.getCar().getLicensePlate(),
+                        "departureKm", attendance.getDepartureKm(),
+                        "departureTime", attendance.getDepartureTime(),
+                        "description", attendance.getDescription() != null ? attendance.getDescription() : ""
+                ));
+            }
+
+            return ResponseEntity.ok(Map.of("active", false, "message", "Nenhum serviço ativo para este usuário."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

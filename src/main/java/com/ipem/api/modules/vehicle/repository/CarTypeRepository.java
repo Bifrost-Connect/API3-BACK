@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface CarTypeRepository extends JpaRepository<CarType, Integer> {
 
-    List<CarType> findByCategory(String category);
+    List<CarType> findByCategoryAndIsActiveTrue(String category);
 
-    List<CarType> findByModelContainingIgnoreCase(String model);
+    List<CarType> findByModelContainingIgnoreCaseAndIsActiveTrue(String model);
 }

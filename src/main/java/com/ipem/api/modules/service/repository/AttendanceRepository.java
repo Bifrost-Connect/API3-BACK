@@ -20,4 +20,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByCarAndCompletionTimeIsNullAndIsActiveTrue(Car car);
 
     Optional<Attendance> findFirstByCarAndCompletionTimeIsNullAndIsActiveTrueOrderByCreatedAtDesc(Car car);
+
+    Optional<Attendance> findByUserRegistrationAndIsActiveTrue(String userRegistration);
+
 }

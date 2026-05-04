@@ -1,15 +1,16 @@
-// LOGIN COM REDIRECIONAMENTO POR PERFIL (ADMINISTRADOR VS TECNICO)
-window.btnindex = async function() {
+window.btnindex = async function () {
     const registrationInput = document.getElementById("matricula")?.value;
     const passwordInput = document.getElementById("senha")?.value;
 
     if (!registrationInput || !passwordInput) {
-        alert("Por favor, preencha todos os campos.");
+        mostrarToast("Por favor, preencha todos os campos.");
         return;
     }
 
     try {
-        const response = await fetch("http://localhost:8080/user/login", {
+        const apiUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : "http://localhost:8080";
+
+        const response = await apiFetch("/user/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -18,44 +19,92 @@ window.btnindex = async function() {
             })
         });
 
-        if (response.ok) {
-            const user = await response.json();
-            const permission = user.permission ? user.permission.toUpperCase() : "";
+        if (response && response.ok) {
+            const data = await response.json();
+            const token = data.token;
 
-            localStorage.setItem("userName", user.name);
+            if (token) {
+                localStorage.setItem(typeof CONFIG !== 'undefined' ? CONFIG.TOKEN_KEY : "auth_token", token);
+            }
+
+            let payload = null;
+            if (typeof CONFIG !== 'undefined' && CONFIG.decodeToken && token) {
+                payload = CONFIG.decodeToken(token);
+            }
+
+            const rawPermission = payload?.permission || data.permission || "TECHNICIAN";
+            const permission = String(rawPermission).toUpperCase().replace("ROLE_", "");
+            const name = payload?.name || data.name || "Usuário";
+
+            localStorage.setItem("userName", name);
             localStorage.setItem("userPermission", permission);
+            localStorage.setItem("userRegistration", String(registrationInput));
 
             if (permission === "ADMINISTRATOR") {
                 window.location.href = "telainicial-gestor.html";
             } else if (permission === "TECHNICIAN") {
                 window.location.href = "telainicial.html";
             } else {
-                alert("Perfil de acesso não reconhecido: " + user.permission);
+                window.location.href = "telainicial.html";
             }
         } else {
-            alert("Matrícula ou senha incorretos.");
+            mostrarToast("Matrícula ou senha incorretos.");
         }
     } catch (error) {
         console.error("Login error:", error);
-        alert("Erro ao conectar com o servidor.");
+        mostrarToast("Erro ao conectar com o servidor.");
     }
 };
 
-// LOGOUT
-window.btnlogout = () => {
-    localStorage.clear();
-    window.location.href = "index.html";
-};
-
-// VISUALIZAR SENHA (OLHINHO)
-window.togglePassword = function() {
+window.togglePassword = function () {
     const passwordField = document.getElementById("senha");
     const eyeLine = document.getElementById("eyeLine");
     if (passwordField.type === "password") {
         passwordField.type = "text";
-        if(eyeLine) eyeLine.style.display = "block";
+        if (eyeLine) eyeLine.style.display = "block";
     } else {
         passwordField.type = "password";
-        if(eyeLine) eyeLine.style.display = "none";
+        if (eyeLine) eyeLine.style.display = "none";
     }
 };
+
+window.btnlogout = () => {
+    if (typeof CONFIG !== 'undefined' && typeof CONFIG.handleLogout === 'function') {
+        CONFIG.handleLogout(false);
+    } else {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+};
+
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    } else {
+        alert(mensagem);
+    }
+}
+
+function mostrarToast1(mensagem) {
+    const toast = document.getElementById("toast-aviso1");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden1");
+
+        setTimeout(() => {
+            toast.classList.add("toast-hidden1");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    } else {
+        alert(mensagem);
+    }
+}

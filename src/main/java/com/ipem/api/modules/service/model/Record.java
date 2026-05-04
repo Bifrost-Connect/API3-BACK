@@ -6,11 +6,14 @@ import com.ipem.api.infrastructure.models.BaseEntity;
 import com.ipem.api.modules.service.model.enums.RecordType;
 import jakarta.persistence.*;
         import lombok.*;
-        import java.time.LocalDateTime;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "records")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@SQLRestriction("is_active = true")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Record extends BaseEntity {
     @Id
@@ -19,7 +22,7 @@ public class Record extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private Service service;
+    private Attendance attendance;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "record_type", columnDefinition = "ENUM('CHECK_IN', 'CHECK_OUT', 'REFUELING', 'INCIDENT')")
@@ -29,4 +32,7 @@ public class Record extends BaseEntity {
 
     private Float recordKm;
     private String note;
+
+    @Column(name = "is_active", columnDefinition = "boolean default true")
+    private Boolean isActive = true;
 }

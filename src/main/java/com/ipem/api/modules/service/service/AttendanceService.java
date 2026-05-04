@@ -200,4 +200,9 @@ public class AttendanceService {
 
         return historyList;
     }
+
+    public Attendance findActiveServiceByUser(String registration) {
+        return attendanceRepository.findByUserRegistrationAndIsActiveTrue(registration)
+                .orElse(null);
+    }
 }
