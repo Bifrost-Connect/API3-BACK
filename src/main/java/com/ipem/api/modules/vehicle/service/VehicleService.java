@@ -3,17 +3,16 @@
 // ==================================================================
 package com.ipem.api.modules.vehicle.service;
 
-import com.ipem.api.modules.service.model.Attendance;
+import com.ipem.api.modules.service.model.Service;
 import com.ipem.api.modules.service.model.Record;
 import com.ipem.api.modules.service.model.Refueling;
 import com.ipem.api.modules.service.model.enums.RecordType;
 import com.ipem.api.modules.service.repository.RefuelingRepository;
-import com.ipem.api.modules.service.repository.AttendanceRepository;
+import com.ipem.api.modules.service.repository.ServiceRepository;
 import com.ipem.api.modules.vehicle.model.Car;
 import com.ipem.api.modules.vehicle.model.CarType;
 import com.ipem.api.modules.vehicle.repository.CarRepository;
 import com.ipem.api.modules.vehicle.repository.CarTypeRepository;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -21,22 +20,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@org.springframework.stereotype.Service
 public class VehicleService {
 
     private final CarRepository carRepository;
     private final CarTypeRepository carTypeRepository;
     private final RefuelingRepository refuelingRepository;
-    private final AttendanceRepository attendanceRepository;
+    private final ServiceRepository serviceRepository;
 
     public VehicleService(CarRepository carRepository,
                           CarTypeRepository carTypeRepository,
                           RefuelingRepository refuelingRepository,
-                          AttendanceRepository attendanceRepository) {
+                          ServiceRepository serviceRepository) {
         this.carRepository = carRepository;
         this.carTypeRepository = carTypeRepository;
         this.refuelingRepository = refuelingRepository;
-        this.attendanceRepository = attendanceRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     @Transactional
@@ -71,11 +70,11 @@ public class VehicleService {
         Car car = carRepository.findById(prefix)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
 
-        Attendance currentService = attendanceRepository.findFirstByCarAndCompletionTimeIsNullAndIsActiveTrueOrderByCreatedAtDesc(car)
+        Service currentService = serviceRepository.findFirstByCarAndCompletionTimeIsNullAndIsActiveTrueOrderByCreatedAtDesc(car)
                 .orElseThrow(() -> new RuntimeException("Não há serviço em aberto para realizar o abastecimento"));
 
         Record record = new Record();
-        record.setAttendance(currentService);
+        record.setService(currentService);
         record.setRecordType(RecordType.REFUELING);
         record.setRecordDate(LocalDateTime.now());
         record.setRecordKm(car.getCurrentKm());

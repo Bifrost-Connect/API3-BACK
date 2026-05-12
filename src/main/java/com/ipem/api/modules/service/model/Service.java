@@ -13,11 +13,11 @@ import org.hibernate.envers.RelationTargetAuditMode; // <-- NOVA IMPORTAÇÃO AQ
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "attendance")
+@Table(name = "service")
 @Audited
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @SQLRestriction("is_active = true")
-public class Attendance extends BaseEntity {
+public class Service extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

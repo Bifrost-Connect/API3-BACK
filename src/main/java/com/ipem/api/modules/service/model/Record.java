@@ -22,7 +22,7 @@ public class Record extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private Attendance attendance;
+    private Service service;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "record_type", columnDefinition = "ENUM('CHECK_IN', 'CHECK_OUT', 'REFUELING', 'INCIDENT')")

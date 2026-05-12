@@ -26,6 +26,7 @@ import java.util.List;
 public class User extends BaseEntity implements UserDetails {
 
     @Id
+    @Column(length = 50)
     private String registration;
 
     private String name;
@@ -39,6 +40,9 @@ public class User extends BaseEntity implements UserDetails {
     private String gender;
     private LocalDate birthDate;
     private String driverLicense;
+
+    @Column(columnDefinition = "TEXT")
+    private String image_url;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "employee_status")

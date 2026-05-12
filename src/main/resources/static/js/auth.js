@@ -1,110 +1,95 @@
-window.btnindex = async function () {
-    const registrationInput = document.getElementById("matricula")?.value;
-    const passwordInput = document.getElementById("senha")?.value;
+/**
+ * js/auth.js
+ * Responsável por: Autenticação de usuários (Login) e manipulação visual da tela de entrada.
+ */
 
-    if (!registrationInput || !passwordInput) {
-        mostrarToast("Por favor, preencha todos os campos.");
+// ===================================================================
+// 1. LÓGICA DE LOGIN COM O BACKEND
+// ===================================================================
+window.btnindex = async function () {
+    const regField = document.getElementById("matricula");
+    const passField = document.getElementById("senha");
+
+    // Validação inicial e sanitização (trim remove espaços em branco acidentais)
+    if (!regField?.value.trim() || !passField?.value) {
+        window.mostrarToast("Por favor, preencha todos os campos.");
         return;
     }
 
-    try {
-        const apiUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : "http://localhost:8080";
+    const loginData = {
+        registration: String(regField.value.trim()),
+        password: passField.value
+    };
 
+    try {
         const response = await apiFetch("/user/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                registration: String(registrationInput),
-                password: passwordInput
-            })
+            body: JSON.stringify(loginData)
         });
 
         if (response && response.ok) {
             const data = await response.json();
-            const token = data.token;
 
-            if (token) {
-                localStorage.setItem(typeof CONFIG !== 'undefined' ? CONFIG.TOKEN_KEY : "auth_token", token);
+            // Salva o Token JWT usando a constante global do basic.js
+            if (data.token) {
+                localStorage.setItem(CONFIG.TOKEN_KEY, data.token);
             }
 
-            let payload = null;
-            if (typeof CONFIG !== 'undefined' && CONFIG.decodeToken && token) {
-                payload = CONFIG.decodeToken(token);
-            }
-
-            const rawPermission = payload?.permission || data.permission || "TECHNICIAN";
-            const permission = String(rawPermission).toUpperCase().replace("ROLE_", "");
+            // Decodifica o payload do token para extrair as roles e o nome,
+            // fazendo fallback para o body da requisição, caso o backend envie fora do token
+            const payload = data.token ? CONFIG.decodeToken(data.token) : null;
+            const permission = String(payload?.permission || data.permission || "TECHNICIAN")
+                .toUpperCase().replace("ROLE_", "");
             const name = payload?.name || data.name || "Usuário";
 
+            // Persistência local da sessão do usuário
             localStorage.setItem("userName", name);
             localStorage.setItem("userPermission", permission);
-            localStorage.setItem("userRegistration", String(registrationInput));
+            localStorage.setItem("userRegistration", loginData.registration);
 
-            if (permission === "ADMINISTRATOR") {
-                window.location.href = "telainicial-gestor.html";
-            } else if (permission === "TECHNICIAN") {
-                window.location.href = "telainicial.html";
-            } else {
-                window.location.href = "telainicial.html";
-            }
-        } else {
-            mostrarToast("Matrícula ou senha incorretos.");
+            // Redirecionamento centralizado (respeitando as regras e o DEV_MODE do basic.js)
+            CONFIG.redirectByPermission();
+
+        } else if (response) {
+            // Tenta extrair a mensagem de erro específica vinda do Spring Boot
+            const errorData = await response.json().catch(() => ({}));
+            const mensagem = errorData.error || errorData.message || "Matrícula ou senha incorretos.";
+            window.mostrarToast(mensagem);
         }
     } catch (error) {
-        console.error("Login error:", error);
-        mostrarToast("Erro ao conectar com o servidor.");
+        console.error("Erro no Login:", error);
+        window.mostrarToast("Erro ao conectar com o servidor.");
     }
 };
 
+// ===================================================================
+// 2. INTERFACE (Manipulação DOM)
+// ===================================================================
 window.togglePassword = function () {
     const passwordField = document.getElementById("senha");
-    const eyeLine = document.getElementById("eyeLine");
-    if (passwordField.type === "password") {
-        passwordField.type = "text";
-        if (eyeLine) eyeLine.style.display = "block";
-    } else {
-        passwordField.type = "password";
-        if (eyeLine) eyeLine.style.display = "none";
+    const eyeLine = document.getElementById("eyeLine"); // Linha diagonal sobre o ícone do olho
+
+    if (passwordField) {
+        // Alterna entre texto legível e asteriscos de senha
+        const isPass = passwordField.type === "password";
+        passwordField.type = isPass ? "text" : "password";
+
+        // Exibe ou oculta o "risco" no ícone do olho para indicar visibilidade
+        if (eyeLine) {
+            eyeLine.style.display = isPass ? "block" : "none";
+        }
     }
 };
 
-window.btnlogout = () => {
-    if (typeof CONFIG !== 'undefined' && typeof CONFIG.handleLogout === 'function') {
-        CONFIG.handleLogout(false);
-    } else {
-        localStorage.clear();
-        window.location.href = "index.html";
+// Adiciona listener para permitir login teclando "Enter" (opcional caso falte no ui.js)
+document.addEventListener('DOMContentLoaded', () => {
+    const passField = document.getElementById("senha");
+    if (passField) {
+        passField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                window.btnindex();
+            }
+        });
     }
-};
-
-function mostrarToast(mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    } else {
-        alert(mensagem);
-    }
-}
-
-function mostrarToast1(mensagem) {
-    const toast = document.getElementById("toast-aviso1");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden1");
-
-        setTimeout(() => {
-            toast.classList.add("toast-hidden1");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    } else {
-        alert(mensagem);
-    }
-}
+});

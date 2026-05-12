@@ -21,7 +21,7 @@ public class Incident extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
-    private Attendance attendance;
+    private Service service;
 
     @Enumerated(EnumType.STRING)
     private IncidentType incidentType;

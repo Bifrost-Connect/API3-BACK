@@ -12,6 +12,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLRestriction("is_active = true")
 public class Car extends BaseEntity {
     @Id
+    @Column(length = 20)
     private String prefix;
     private String licensePlate;
 
@@ -27,6 +28,9 @@ public class Car extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String observations;
+
+    @Column(columnDefinition = "TEXT")
+    private String image_url;
 
     private String color;
     private String requiredLicense;

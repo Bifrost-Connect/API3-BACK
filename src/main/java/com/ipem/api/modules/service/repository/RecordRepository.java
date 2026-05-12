@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface RecordRepository extends JpaRepository<Record, Long> {
 
-    List<Record> findByAttendanceIdAndIsActiveTrueOrderByRecordDateAsc(Long attendanceId);
+    List<Record> findByserviceIdAndIsActiveTrueOrderByRecordDateAsc(Long serviceId);
 
-    List<Record> findByAttendanceIdAndRecordTypeAndIsActiveTrue(Long attendanceId, RecordType type);
+    List<Record> findByserviceIdAndRecordTypeAndIsActiveTrue(Long serviceId, RecordType type);
 }

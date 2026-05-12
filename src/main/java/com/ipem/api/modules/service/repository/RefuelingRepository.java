@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface RefuelingRepository extends JpaRepository<Refueling, Long> {
 
-    @Query("SELECT a FROM Refueling a JOIN a.record r WHERE r.attendance.car.prefix = :prefix AND a.isActive = true AND r.isActive = true ORDER BY r.recordDate DESC")
+    @Query("SELECT a FROM Refueling a JOIN a.record r WHERE r.service.car.prefix = :prefix AND a.isActive = true AND r.isActive = true ORDER BY r.recordDate DESC")
     List<Refueling> findLatestRefuelingsByCar(@Param("prefix") String prefix);
 
     @Query("SELECT COALESCE(SUM(r.totalAmount), 0.0) FROM Refueling r JOIN r.record rec WHERE MONTH(rec.recordDate) = MONTH(CURRENT_DATE) AND YEAR(rec.recordDate) = YEAR(CURRENT_DATE) AND r.isActive = true")
