@@ -45,6 +45,63 @@ async function carregarTiposVeiculo() {
     }
 }
 
+// ===================================================================
+// NOVO: CARREGAMENTO DINÂMICO DOS FILTROS
+// ===================================================================
+
+async function carregarFiltrosDinamicos() {
+    const selectTipo = document.getElementById("filtroTipo");
+    const selectMarca = document.getElementById("filtroMarca");
+
+    if (!selectTipo || !selectMarca) return;
+
+    try {
+        const response = await apiFetch("/vehicle/types");
+
+        if (response && response.ok) {
+            const tipos = await response.json();
+
+            // Mantém apenas a opção padrão
+            selectTipo.innerHTML = '<option value="TODOS">Todos os tipos</option>';
+            selectMarca.innerHTML = '<option value="TODOS">Todas as marcas</option>';
+
+            const categoriasAdicionadas = new Set();
+            const marcasAdicionadas = new Set();
+
+            tipos.forEach(tipo => {
+
+                // ===== CATEGORIAS =====
+                const categoria = traduzirCategoria(tipo.category);
+
+                if (!categoriasAdicionadas.has(categoria)) {
+                    categoriasAdicionadas.add(categoria);
+
+                    const optionTipo = document.createElement("option");
+                    optionTipo.value = categoria.toUpperCase();
+                    optionTipo.textContent = categoria;
+
+                    selectTipo.appendChild(optionTipo);
+                }
+
+                // ===== MARCAS =====
+                const marcaUpper = tipo.brand.toUpperCase();
+
+                if (!marcasAdicionadas.has(marcaUpper)) {
+                    marcasAdicionadas.add(marcaUpper);
+
+                    const optionMarca = document.createElement("option");
+                    optionMarca.value = marcaUpper;
+                    optionMarca.textContent = tipo.brand;
+
+                    selectMarca.appendChild(optionMarca);
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Erro ao carregar filtros:", error);
+    }
+}
+
 // Envia os dados do formulário para registrar uma nova viatura física
 window.cadastrarVeiculo = async function () {
     const prefixo = document.getElementById("cad-prefixo")?.value;
@@ -83,7 +140,12 @@ window.cadastrarVeiculo = async function () {
             } else {
                 window.mostrarToast("Veículo cadastrado!", "toast-aviso1");
             }
+
             limparFormulario();
+
+            // NOVO: Atualiza filtros automaticamente após cadastro
+            carregarFiltrosDinamicos();
+
         } else if (response) {
             const erro = await response.json();
             window.mostrarToast("Erro no cadastro: " + (erro.error || "Verifique os dados."));
@@ -268,6 +330,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Carrega dados base dependendo de qual tela o usuário está
     if (document.getElementById("cad-tipo")) carregarTiposVeiculo();
     if (document.getElementById("listaVeiculos")) carregarVeiculosDisponiveis();
+
+    // NOVO: Carrega filtros dinamicamente
+    carregarFiltrosDinamicos();
 
     // Configuração dos botões de cadastro (Tela do Gestor)
     const popupConfirmacaoCad = document.getElementById('popupConfirmacao');
