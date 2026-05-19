@@ -5,7 +5,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE refuelings;
 TRUNCATE TABLE incidents;
 TRUNCATE TABLE records;
+TRUNCATE TABLE service_addresses_aud;
 TRUNCATE TABLE service_aud;
+TRUNCATE TABLE service_addresses;
 TRUNCATE TABLE service;
 TRUNCATE TABLE cars;
 TRUNCATE TABLE users;
@@ -89,7 +91,7 @@ INSERT INTO service (id, car_prefix, user_registration, departure_time, completi
 (6, 'CAR008', '10009', '2026-01-23 08:00:00', '2026-01-23 16:00:00', 95000.0, 'SJC', 'Manutenção Preventiva', 'MEDIUM', 0),
 (7, 'CAR009', '10010', '2026-01-25 09:00:00', '2026-01-25 12:00:00', 5000.0, 'Taubaté', 'Entrega de Equipamentos', 'LOW', 0),
 (8, 'CAR010', '10011', '2026-01-28 08:30:00', '2026-01-28 17:30:00', 4000.0, 'Jacareí', 'Verificação Local', 'MEDIUM', 0),
-(9, 'CAR011', '10012', '2026-01-30 07:00:00', '2026-01-30 15:00:00', 1000.0, 'Guarulhos', 'Visita Técnicaização', 'HIGH', 0),
+(9, 'CAR011', '10012', '2026-01-30 07:00:00', '2026-01-30 15:00:00', 1000.0, 'Guarulhos', 'Visita Técnica', 'HIGH', 0),
 (10, 'CAR012', '10013', '2026-01-31 08:00:00', '2026-01-31 16:00:00', 15000.0, 'Osasco', 'Fiscalização de Postos', 'MEDIUM', 0),
 
 -- FEVEREIRO (Fechados)
@@ -142,10 +144,66 @@ INSERT INTO service (id, car_prefix, user_registration, departure_time, completi
 (50, 'CAR020', '10015', '2026-05-07 09:00:00', NULL, 11800.0, 'Hortolândia', 'Ronda Fiscal', 'MEDIUM', 1);
 
 -- =========================================================================
--- 6. REGISTROS (RECORDS) DOS CHAMADOS (Check-out e Abastecimentos)
+-- 5.1 ENDEREÇOS DOS SERVIÇOS (Novo bloco acoplado à tabela service_addresses)
+-- =========================================================================
+INSERT INTO service_addresses (service_id, street, number, neighborhood, city, state, zip_code) VALUES 
+(1, 'Avenida Paulista', '1000', 'Bela Vista', 'São Paulo', 'SP', '01310-100'),
+(2, 'Avenida Francisco Glicério', '120', 'Centro', 'Campinas', 'SP', '13012-000'),
+(3, 'Avenida Ana Costa', '500', 'Gonzaga', 'Santos', 'SP', '11060-001'),
+(4, 'Avenida Dom Aguirre', '200', 'Centro', 'Sorocaba', 'SP', '18090-000'),
+(5, 'Avenida Jundiaí', '150', 'Anhangabaú', 'Jundiaí', 'SP', '13208-051'),
+(6, 'Rua Rubião Júnior', '84', 'Centro', 'SJC', 'SP', '12210-180'),
+(7, 'Avenida Marechal Deodoro', '300', 'Centro', 'Taubaté', 'SP', '12010-000'),
+(8, 'Rua Barão de Jacareí', '450', 'Centro', 'Jacareí', 'SP', '12308-001'),
+(9, 'Avenida Paulo Faccini', '100', 'Macedo', 'Guarulhos', 'SP', '07115-000'),
+(10, 'Avenida dos Autonomistas', '3000', 'Centro', 'Osasco', 'SP', '06090-010'),
+(11, 'Rua Tiradentes', '123', 'Centro', 'Limeira', 'SP', '13480-080'),
+(12, 'Avenida Vereador Narciso Yague', '55', 'Centro', 'Mogi das Cruzes', 'SP', '08780-000'),
+(13, 'Alameda Rio Negro', '500', 'Alphaville', 'Barueri', 'SP', '06454-000'),
+(14, 'Avenida Carvalho Pinto', '200', 'Centro', 'Atibaia', 'SP', '12940-000'),
+(15, 'Rua do Porto', '100', 'Centro', 'Piracicaba', 'SP', '13400-000'),
+(16, 'Avenida dos Esportes', '30', 'Centro', 'Valinhos', 'SP', '13270-000'),
+(17, 'Rua Luiz Camilo de Camargo', '90', 'Centro', 'Hortolândia', 'SP', '13184-000'),
+(18, 'Avenida Cassiano Ricardo', '300', 'Jardim Aquarius', 'SJC', 'SP', '12246-870'),
+(19, 'Rua Luiz Simon', '40', 'Centro', 'Jacareí', 'SP', '12327-020'),
+(20, 'Praça Dom Epaminondas', '12', 'Centro', 'Taubaté', 'SP', '12010-020'),
+(21, 'Rua Augusta', '1500', 'Consolação', 'São Paulo', 'SP', '01305-100'),
+(22, 'Rua Conceição', '200', 'Centro', 'Campinas', 'SP', '13010-050'),
+(23, 'Rua São Bento', '50', 'Centro', 'Sorocaba', 'SP', '18010-040'),
+(24, 'Rua XV de Novembro', '100', 'Centro', 'SJC', 'SP', '12210-000'),
+(25, 'Rodovia Presidente Dutra', 'Km 160', 'Parque Meia Lua', 'Jacareí', 'SP', '12335-000'),
+(26, 'Avenida Tiradentes', '800', 'Centro', 'Taubaté', 'SP', '12030-000'),
+(27, 'Rua Dom Pedro II', '30', 'Centro', 'Guarulhos', 'SP', '07011-001'),
+(28, 'Avenida Bussocaba', '300', 'Vila Campesina', 'Osasco', 'SP', '06023-020'),
+(29, 'Rua Carlos Gomes', '10', 'Centro', 'Limeira', 'SP', '13480-000'),
+(30, 'Rua Coronel Souza Franco', '50', 'Centro', 'Mogi das Cruzes', 'SP', '08710-000'),
+(31, 'Avenida Doutor Dib Sauaia', '100', 'Jardim Paulista', 'Barueri', 'SP', '06440-000'),
+(32, 'Rua José Alvim', '20', 'Centro', 'Atibaia', 'SP', '12940-000'),
+(33, 'Rua XV de Novembro', '300', 'Centro', 'Piracicaba', 'SP', '13400-000'),
+(34, 'Avenida Invernada', '40', 'Vila Santana', 'Valinhos', 'SP', '13271-000'),
+(35, 'Rua Zacarias Costa Camargo', '100', 'Centro', 'Hortolândia', 'SP', '13184-000'),
+(36, 'Avenida Andromeda', '800', 'Jardim Satélite', 'SJC', 'SP', '12230-000'),
+(37, 'Avenida Siqueira Campos', '200', 'Centro', 'Jacareí', 'SP', '12308-000'),
+(38, 'Rua Visconde do Rio Branco', '30', 'Centro', 'Taubaté', 'SP', '12020-000'),
+(39, 'Avenida Brigadeiro Faria Lima', '2000', 'Pinheiros', 'São Paulo', 'SP', '01451-000'),
+(40, 'Avenida Norte Sul', '1000', 'Cambuí', 'Campinas', 'SP', '13025-000'),
+(41, 'Avenida Itavuvu', '2500', 'Jardim Maria Antonia Prado', 'Sorocaba', 'SP', '18076-000'),
+(42, 'Rua Paraibuna', '800', 'Jardim São Dimas', 'SJC', 'SP', '12245-020'),
+(43, 'Rua Rui Barbosa', '40', 'Centro', 'Jacareí', 'SP', '12308-000'),
+(44, 'Avenida Independência', '500', 'Independência', 'Taubaté', 'SP', '12031-000'),
+(45, 'Avenida Monteiro Lobato', '300', 'Centro', 'Guarulhos', 'SP', '07112-000'),
+(46, 'Avenida Brasil', '400', 'Rochdale', 'Osasco', 'SP', '06210-000'),
+(47, 'Rua Senador Vergueiro', '10', 'Centro', 'Limeira', 'SP', '13480-000'),
+(48, 'Rodovia Tamoios', 'Km 5', 'Jardim Uira', 'SJC', 'SP', '12227-000'),
+(49, 'Avenida Japão', '150', 'Alto Ipiranga', 'Mogi das Cruzes', 'SP', '08730-000'),
+(50, 'Avenida Olívio Franceschini', '400', 'Centro', 'Hortolândia', 'SP', '13184-000');
+
+
+-- =========================================================================
+-- 6. REGISTROS 
 -- =========================================================================
 INSERT INTO records (id, service_id, record_type, record_date, record_km, note) VALUES 
--- Serviço 1 a 10 (Jan)
+
 (1, 1, 'CHECK_OUT', '2026-01-05 08:00:00', 15000.0, 'Saída SP'),
 (2, 1, 'REFUELING', '2026-01-05 10:00:00', 15100.0, 'Posto BR'),
 (3, 2, 'CHECK_OUT', '2026-01-10 09:00:00', 8900.0, 'Saída Campinas'),
@@ -166,8 +224,6 @@ INSERT INTO records (id, service_id, record_type, record_date, record_km, note) 
 (18, 9, 'REFUELING', '2026-01-30 09:00:00', 1150.0, 'Posto Ipiranga'),
 (19, 10, 'CHECK_OUT', '2026-01-31 08:00:00', 15000.0, 'Saída Osasco'),
 (20, 10, 'REFUELING', '2026-01-31 11:00:00', 15250.0, 'Posto Ale'),
-
--- Serviço 11 a 20 (Fev)
 (21, 11, 'CHECK_OUT', '2026-02-04 08:00:00', 25000.0, 'Saída Limeira'),
 (22, 11, 'REFUELING', '2026-02-04 10:00:00', 25200.0, 'Posto BR'),
 (23, 12, 'CHECK_OUT', '2026-02-06 07:30:00', 3500.0, 'Saída Mogi'),
@@ -188,8 +244,6 @@ INSERT INTO records (id, service_id, record_type, record_date, record_km, note) 
 (38, 19, 'REFUELING', '2026-02-25 10:00:00', 45700.0, 'Posto Shell'),
 (39, 20, 'CHECK_OUT', '2026-02-28 08:00:00', 9300.0, 'Saída Taubaté'),
 (40, 20, 'REFUELING', '2026-02-28 10:00:00', 9450.0, 'Posto BR'),
-
--- Serviço 21 a 30 (Março)
 (41, 21, 'CHECK_OUT', '2026-03-02 08:00:00', 6000.0, 'Saída SP'),
 (42, 21, 'REFUELING', '2026-03-02 10:00:00', 6150.0, 'Posto BR'),
 (43, 22, 'CHECK_OUT', '2026-03-05 09:00:00', 22500.0, 'Saída Campinas'),
@@ -210,8 +264,6 @@ INSERT INTO records (id, service_id, record_type, record_date, record_km, note) 
 (58, 29, 'REFUELING', '2026-03-27 10:00:00', 25700.0, 'Posto Ipiranga'),
 (59, 30, 'CHECK_OUT', '2026-03-30 08:00:00', 4000.0, 'Saída Mogi'),
 (60, 30, 'REFUELING', '2026-03-30 10:00:00', 4200.0, 'Posto Graal'),
-
--- Serviço 31 a 40 (Abril)
 (61, 31, 'CHECK_OUT', '2026-04-03 08:00:00', 12500.0, 'Saída Barueri'),
 (62, 31, 'REFUELING', '2026-04-03 10:00:00', 12700.0, 'Posto BR'),
 (63, 32, 'CHECK_OUT', '2026-04-06 09:00:00', 18500.0, 'Saída Atibaia'),
@@ -232,8 +284,6 @@ INSERT INTO records (id, service_id, record_type, record_date, record_km, note) 
 (78, 39, 'REFUELING', '2026-04-27 09:00:00', 6700.0, 'Posto Ale'),
 (79, 40, 'CHECK_OUT', '2026-04-30 08:00:00', 23000.0, 'Saída Campinas'),
 (80, 40, 'REFUELING', '2026-04-30 10:00:00', 23200.0, 'Posto Graal'),
-
--- Serviço 41 a 50 (Maio)
 (81, 41, 'CHECK_OUT', '2026-05-02 08:00:00', 31000.0, 'Saída Sorocaba'),
 (82, 41, 'REFUELING', '2026-05-02 10:00:00', 31200.0, 'Posto BR'),
 (83, 42, 'CHECK_OUT', '2026-05-03 09:00:00', 5800.0, 'Saída SJC'),
@@ -253,11 +303,95 @@ INSERT INTO records (id, service_id, record_type, record_date, record_km, note) 
 (97, 49, 'CHECK_OUT', '2026-05-07 08:30:00', 4200.0, 'Saída Mogi - Em Andamento'),
 (98, 49, 'REFUELING', '2026-05-07 09:30:00', 4250.0, 'Posto Ale'),
 (99, 50, 'CHECK_OUT', '2026-05-07 09:00:00', 11800.0, 'Saída Hortolândia - Em Andamento'),
-(100, 50, 'REFUELING', '2026-05-07 10:00:00', 11850.0, 'Posto Ipiranga');
+(100, 50, 'REFUELING', '2026-05-07 10:00:00', 11850.0, 'Posto Ipiranga'),
+
+-- Servico 1
+(101, 1, 'ARRIVAL_AT_LOCATION', '2026-01-05 11:30:00', 15150.0, 'Chegada ao local do serviço'),
+(102, 1, 'SERVICE_COMPLETION', '2026-01-05 15:30:00', 15150.0, 'Serviço finalizado, preparando retorno'),
+(103, 1, 'RETURN_TRIP', '2026-01-05 15:45:00', 15150.0, 'Início da viagem de retorno'),
+(104, 1, 'CHECK_IN', '2026-01-05 17:00:00', 15300.0, 'Retorno à base'),
+-- Servico 2
+(105, 2, 'ARRIVAL_AT_LOCATION', '2026-01-10 12:00:00', 9050.0, 'Chegada ao local do serviço'),
+(106, 2, 'SERVICE_COMPLETION', '2026-01-10 15:00:00', 9050.0, 'Serviço finalizado, preparando retorno'),
+(107, 2, 'RETURN_TRIP', '2026-01-10 15:15:00', 9050.0, 'Início da viagem de retorno'),
+(108, 2, 'CHECK_IN', '2026-01-10 16:30:00', 9150.0, 'Retorno à base'),
+-- Servico 3
+(109, 3, 'ARRIVAL_AT_LOCATION', '2026-01-15 11:00:00', 5750.0, 'Chegada ao local do serviço'),
+(110, 3, 'SERVICE_COMPLETION', '2026-01-15 13:30:00', 5750.0, 'Serviço finalizado, preparando retorno'),
+(111, 3, 'RETURN_TRIP', '2026-01-15 13:45:00', 5750.0, 'Início da viagem de retorno'),
+(112, 3, 'CHECK_IN', '2026-01-15 15:00:00', 5850.0, 'Retorno à base'),
+-- Servico 4
+(113, 4, 'ARRIVAL_AT_LOCATION', '2026-01-18 13:30:00', 22250.0, 'Chegada ao local do serviço'),
+(114, 4, 'SERVICE_COMPLETION', '2026-01-18 16:00:00', 22250.0, 'Serviço finalizado, preparando retorno'),
+(115, 4, 'RETURN_TRIP', '2026-01-18 16:30:00', 22250.0, 'Início da viagem de retorno'),
+(116, 4, 'CHECK_IN', '2026-01-18 18:00:00', 22400.0, 'Retorno à base'),
+-- Servico 5
+(117, 5, 'ARRIVAL_AT_LOCATION', '2026-01-20 12:30:00', 30220.0, 'Chegada ao local do serviço'),
+(118, 5, 'SERVICE_COMPLETION', '2026-01-20 13:15:00', 30220.0, 'Serviço finalizado, preparando retorno'),
+(119, 5, 'RETURN_TRIP', '2026-01-20 13:20:00', 30220.0, 'Início da viagem de retorno'),
+(120, 5, 'CHECK_IN', '2026-01-20 14:00:00', 30280.0, 'Retorno à base'),
+-- Servico 6 a 10 
+(121, 6, 'ARRIVAL_AT_LOCATION', '2026-01-23 12:30:00', 95200.0, 'Chegada'), (122, 6, 'SERVICE_COMPLETION', '2026-01-23 14:30:00', 95200.0, 'Fim do Servico'), (123, 6, 'RETURN_TRIP', '2026-01-23 14:45:00', 95200.0, 'Retornando'), (124, 6, 'CHECK_IN', '2026-01-23 16:00:00', 95350.0, 'Base'),
+(125, 7, 'ARRIVAL_AT_LOCATION', '2026-01-25 11:00:00', 5250.0, 'Chegada'), (126, 7, 'SERVICE_COMPLETION', '2026-01-25 11:30:00', 5250.0, 'Fim do Servico'), (127, 7, 'RETURN_TRIP', '2026-01-25 11:40:00', 5250.0, 'Retornando'), (128, 7, 'CHECK_IN', '2026-01-25 12:00:00', 5300.0, 'Base'),
+(129, 8, 'ARRIVAL_AT_LOCATION', '2026-01-28 13:00:00', 4250.0, 'Chegada'), (130, 8, 'SERVICE_COMPLETION', '2026-01-28 16:00:00', 4250.0, 'Fim do Servico'), (131, 8, 'RETURN_TRIP', '2026-01-28 16:15:00', 4250.0, 'Retornando'), (132, 8, 'CHECK_IN', '2026-01-28 17:30:00', 4400.0, 'Base'),
+(133, 9, 'ARRIVAL_AT_LOCATION', '2026-01-30 10:00:00', 1200.0, 'Chegada'), (134, 9, 'SERVICE_COMPLETION', '2026-01-30 13:00:00', 1200.0, 'Fim do Servico'), (135, 9, 'RETURN_TRIP', '2026-01-30 13:30:00', 1200.0, 'Retornando'), (136, 9, 'CHECK_IN', '2026-01-30 15:00:00', 1350.0, 'Base'),
+(137, 10, 'ARRIVAL_AT_LOCATION', '2026-01-31 12:00:00', 15300.0, 'Chegada'), (138, 10, 'SERVICE_COMPLETION', '2026-01-31 14:00:00', 15300.0, 'Fim do Servico'), (139, 10, 'RETURN_TRIP', '2026-01-31 14:30:00', 15300.0, 'Retornando'), (140, 10, 'CHECK_IN', '2026-01-31 16:00:00', 15450.0, 'Base'),
+
+-- Servico 11 a 20
+(141, 11, 'ARRIVAL_AT_LOCATION', '2026-02-04 11:30:00', 25250.0, 'Chegada'), (142, 11, 'SERVICE_COMPLETION', '2026-02-04 15:00:00', 25250.0, 'Fim'), (143, 11, 'RETURN_TRIP', '2026-02-04 15:15:00', 25250.0, 'Retornando'), (144, 11, 'CHECK_IN', '2026-02-04 17:00:00', 25400.0, 'Base'),
+(145, 12, 'ARRIVAL_AT_LOCATION', '2026-02-06 10:00:00', 3750.0, 'Chegada'), (146, 12, 'SERVICE_COMPLETION', '2026-02-06 13:00:00', 3750.0, 'Fim'), (147, 12, 'RETURN_TRIP', '2026-02-06 13:15:00', 3750.0, 'Retornando'), (148, 12, 'CHECK_IN', '2026-02-06 14:30:00', 3850.0, 'Base'),
+(149, 13, 'ARRIVAL_AT_LOCATION', '2026-02-09 12:30:00', 12300.0, 'Chegada'), (150, 13, 'SERVICE_COMPLETION', '2026-02-09 16:00:00', 12300.0, 'Fim'), (151, 13, 'RETURN_TRIP', '2026-02-09 16:30:00', 12300.0, 'Retornando'), (152, 13, 'CHECK_IN', '2026-02-09 18:00:00', 12450.0, 'Base'),
+(153, 14, 'ARRIVAL_AT_LOCATION', '2026-02-12 11:30:00', 18150.0, 'Chegada'), (154, 14, 'SERVICE_COMPLETION', '2026-02-12 14:00:00', 18150.0, 'Fim'), (155, 14, 'RETURN_TRIP', '2026-02-12 14:30:00', 18150.0, 'Retornando'), (156, 14, 'CHECK_IN', '2026-02-12 16:00:00', 18300.0, 'Base'),
+(157, 15, 'ARRIVAL_AT_LOCATION', '2026-02-15 11:00:00', 5300.0, 'Chegada'), (158, 15, 'SERVICE_COMPLETION', '2026-02-15 14:00:00', 5300.0, 'Fim'), (159, 15, 'RETURN_TRIP', '2026-02-15 14:15:00', 5300.0, 'Retornando'), (160, 15, 'CHECK_IN', '2026-02-15 15:30:00', 5450.0, 'Base'),
+(161, 16, 'ARRIVAL_AT_LOCATION', '2026-02-18 11:30:00', 8200.0, 'Chegada'), (162, 16, 'SERVICE_COMPLETION', '2026-02-18 15:00:00', 8200.0, 'Fim'), (163, 16, 'RETURN_TRIP', '2026-02-18 15:30:00', 8200.0, 'Retornando'), (164, 16, 'CHECK_IN', '2026-02-18 17:00:00', 8350.0, 'Base'),
+(165, 17, 'ARRIVAL_AT_LOCATION', '2026-02-20 11:30:00', 11250.0, 'Chegada'), (166, 17, 'SERVICE_COMPLETION', '2026-02-20 14:30:00', 11250.0, 'Fim'), (167, 17, 'RETURN_TRIP', '2026-02-20 15:00:00', 11250.0, 'Retornando'), (168, 17, 'CHECK_IN', '2026-02-20 16:30:00', 11400.0, 'Base'),
+(169, 18, 'ARRIVAL_AT_LOCATION', '2026-02-23 12:30:00', 15500.0, 'Chegada'), (170, 18, 'SERVICE_COMPLETION', '2026-02-23 16:00:00', 15500.0, 'Fim'), (171, 18, 'RETURN_TRIP', '2026-02-23 16:30:00', 15500.0, 'Retornando'), (172, 18, 'CHECK_IN', '2026-02-23 18:00:00', 15650.0, 'Base'),
+(173, 19, 'ARRIVAL_AT_LOCATION', '2026-02-25 11:30:00', 45750.0, 'Chegada'), (174, 19, 'SERVICE_COMPLETION', '2026-02-25 15:00:00', 45750.0, 'Fim'), (175, 19, 'RETURN_TRIP', '2026-02-25 15:30:00', 45750.0, 'Retornando'), (176, 19, 'CHECK_IN', '2026-02-25 17:00:00', 45900.0, 'Base'),
+(177, 20, 'ARRIVAL_AT_LOCATION', '2026-02-28 11:00:00', 9500.0, 'Chegada'), (178, 20, 'SERVICE_COMPLETION', '2026-02-28 12:30:00', 9500.0, 'Fim'), (179, 20, 'RETURN_TRIP', '2026-02-28 12:45:00', 9500.0, 'Retornando'), (180, 20, 'CHECK_IN', '2026-02-28 14:00:00', 9650.0, 'Base'),
+
+-- Servico 21 a 30
+(181, 21, 'ARRIVAL_AT_LOCATION', '2026-03-02 11:30:00', 6200.0, 'Chegada'), (182, 21, 'SERVICE_COMPLETION', '2026-03-02 15:00:00', 6200.0, 'Fim'), (183, 21, 'RETURN_TRIP', '2026-03-02 15:30:00', 6200.0, 'Retornando'), (184, 21, 'CHECK_IN', '2026-03-02 17:00:00', 6350.0, 'Base'),
+(185, 22, 'ARRIVAL_AT_LOCATION', '2026-03-05 12:30:00', 22750.0, 'Chegada'), (186, 22, 'SERVICE_COMPLETION', '2026-03-05 14:30:00', 22750.0, 'Fim'), (187, 22, 'RETURN_TRIP', '2026-03-05 14:45:00', 22750.0, 'Retornando'), (188, 22, 'CHECK_IN', '2026-03-05 16:00:00', 22900.0, 'Base'),
+(189, 23, 'ARRIVAL_AT_LOCATION', '2026-03-08 11:00:00', 30750.0, 'Chegada'), (190, 23, 'SERVICE_COMPLETION', '2026-03-08 12:30:00', 30750.0, 'Fim'), (191, 23, 'RETURN_TRIP', '2026-03-08 13:00:00', 30750.0, 'Retornando'), (192, 23, 'CHECK_IN', '2026-03-08 14:30:00', 30900.0, 'Base'),
+(193, 24, 'ARRIVAL_AT_LOCATION', '2026-03-12 13:30:00', 95450.0, 'Chegada'), (194, 24, 'SERVICE_COMPLETION', '2026-03-12 16:00:00', 95450.0, 'Fim'), (195, 24, 'RETURN_TRIP', '2026-03-12 16:30:00', 95450.0, 'Retornando'), (196, 24, 'CHECK_IN', '2026-03-12 18:00:00', 95600.0, 'Base'),
+(197, 25, 'ARRIVAL_AT_LOCATION', '2026-03-15 11:30:00', 5700.0, 'Chegada'), (198, 25, 'SERVICE_COMPLETION', '2026-03-15 13:30:00', 5700.0, 'Fim'), (199, 25, 'RETURN_TRIP', '2026-03-15 13:45:00', 5700.0, 'Retornando'), (200, 25, 'CHECK_IN', '2026-03-15 15:00:00', 5850.0, 'Base'),
+(201, 26, 'ARRIVAL_AT_LOCATION', '2026-03-18 12:00:00', 4750.0, 'Chegada'), (202, 26, 'SERVICE_COMPLETION', '2026-03-18 14:30:00', 4750.0, 'Fim'), (203, 26, 'RETURN_TRIP', '2026-03-18 15:00:00', 4750.0, 'Retornando'), (204, 26, 'CHECK_IN', '2026-03-18 16:30:00', 4900.0, 'Base'),
+(205, 27, 'ARRIVAL_AT_LOCATION', '2026-03-21 10:30:00', 1700.0, 'Chegada'), (206, 27, 'SERVICE_COMPLETION', '2026-03-21 12:30:00', 1700.0, 'Fim'), (207, 27, 'RETURN_TRIP', '2026-03-21 12:45:00', 1700.0, 'Retornando'), (208, 27, 'CHECK_IN', '2026-03-21 14:00:00', 1850.0, 'Base'),
+(209, 28, 'ARRIVAL_AT_LOCATION', '2026-03-24 12:30:00', 15750.0, 'Chegada'), (210, 28, 'SERVICE_COMPLETION', '2026-03-24 15:30:00', 15750.0, 'Fim'), (211, 28, 'RETURN_TRIP', '2026-03-24 16:00:00', 15750.0, 'Retornando'), (212, 28, 'CHECK_IN', '2026-03-24 17:30:00', 15900.0, 'Base'),
+(213, 29, 'ARRIVAL_AT_LOCATION', '2026-03-27 11:30:00', 25750.0, 'Chegada'), (214, 29, 'SERVICE_COMPLETION', '2026-03-27 14:00:00', 25750.0, 'Fim'), (215, 29, 'RETURN_TRIP', '2026-03-27 14:30:00', 25750.0, 'Retornando'), (216, 29, 'CHECK_IN', '2026-03-27 16:00:00', 25900.0, 'Base'),
+(217, 30, 'ARRIVAL_AT_LOCATION', '2026-03-30 11:30:00', 4250.0, 'Chegada'), (218, 30, 'SERVICE_COMPLETION', '2026-03-30 13:30:00', 4250.0, 'Fim'), (219, 30, 'RETURN_TRIP', '2026-03-30 14:00:00', 4250.0, 'Retornando'), (220, 30, 'CHECK_IN', '2026-03-30 15:30:00', 4400.0, 'Base'),
+
+-- Servico 31 a 40
+(221, 31, 'ARRIVAL_AT_LOCATION', '2026-04-03 11:30:00', 12750.0, 'Chegada'), (222, 31, 'SERVICE_COMPLETION', '2026-04-03 14:00:00', 12750.0, 'Fim'), (223, 31, 'RETURN_TRIP', '2026-04-03 14:30:00', 12750.0, 'Retornando'), (224, 31, 'CHECK_IN', '2026-04-03 16:00:00', 12900.0, 'Base'),
+(225, 32, 'ARRIVAL_AT_LOCATION', '2026-04-06 12:30:00', 18750.0, 'Chegada'), (226, 32, 'SERVICE_COMPLETION', '2026-04-06 15:00:00', 18750.0, 'Fim'), (227, 32, 'RETURN_TRIP', '2026-04-06 15:30:00', 18750.0, 'Retornando'), (228, 32, 'CHECK_IN', '2026-04-06 17:00:00', 18900.0, 'Base'),
+(229, 33, 'ARRIVAL_AT_LOCATION', '2026-04-09 11:00:00', 5750.0, 'Chegada'), (230, 33, 'SERVICE_COMPLETION', '2026-04-09 13:30:00', 5750.0, 'Fim'), (231, 33, 'RETURN_TRIP', '2026-04-09 14:00:00', 5750.0, 'Retornando'), (232, 33, 'CHECK_IN', '2026-04-09 15:30:00', 5900.0, 'Base'),
+(233, 34, 'ARRIVAL_AT_LOCATION', '2026-04-12 11:30:00', 8750.0, 'Chegada'), (234, 34, 'SERVICE_COMPLETION', '2026-04-12 16:00:00', 8750.0, 'Fim'), (235, 34, 'RETURN_TRIP', '2026-04-12 16:30:00', 8750.0, 'Retornando'), (236, 34, 'CHECK_IN', '2026-04-12 18:00:00', 8900.0, 'Base'),
+(237, 35, 'ARRIVAL_AT_LOCATION', '2026-04-15 13:30:00', 11750.0, 'Chegada'), (238, 35, 'SERVICE_COMPLETION', '2026-04-15 14:30:00', 11750.0, 'Fim'), (239, 35, 'RETURN_TRIP', '2026-04-15 15:00:00', 11750.0, 'Retornando'), (240, 35, 'CHECK_IN', '2026-04-15 16:00:00', 11900.0, 'Base'),
+(241, 36, 'ARRIVAL_AT_LOCATION', '2026-04-18 11:30:00', 15850.0, 'Chegada'), (242, 36, 'SERVICE_COMPLETION', '2026-04-18 13:30:00', 15850.0, 'Fim'), (243, 36, 'RETURN_TRIP', '2026-04-18 13:45:00', 15850.0, 'Retornando'), (244, 36, 'CHECK_IN', '2026-04-18 15:00:00', 16000.0, 'Base'),
+(245, 37, 'ARRIVAL_AT_LOCATION', '2026-04-21 12:30:00', 46250.0, 'Chegada'), (246, 37, 'SERVICE_COMPLETION', '2026-04-21 14:30:00', 46250.0, 'Fim'), (247, 37, 'RETURN_TRIP', '2026-04-21 15:00:00', 46250.0, 'Retornando'), (248, 37, 'CHECK_IN', '2026-04-21 16:30:00', 46400.0, 'Base'),
+(249, 38, 'ARRIVAL_AT_LOCATION', '2026-04-24 12:00:00', 9850.0, 'Chegada'), (250, 38, 'SERVICE_COMPLETION', '2026-04-24 15:30:00', 9850.0, 'Fim'), (251, 38, 'RETURN_TRIP', '2026-04-24 16:00:00', 9850.0, 'Retornando'), (252, 38, 'CHECK_IN', '2026-04-24 17:30:00', 10000.0, 'Base'),
+(253, 39, 'ARRIVAL_AT_LOCATION', '2026-04-27 10:30:00', 6750.0, 'Chegada'), (254, 39, 'SERVICE_COMPLETION', '2026-04-27 13:00:00', 6750.0, 'Fim'), (255, 39, 'RETURN_TRIP', '2026-04-27 13:30:00', 6750.0, 'Retornando'), (256, 39, 'CHECK_IN', '2026-04-27 15:00:00', 6900.0, 'Base'),
+(257, 40, 'ARRIVAL_AT_LOCATION', '2026-04-30 11:30:00', 23250.0, 'Chegada'), (258, 40, 'SERVICE_COMPLETION', '2026-04-30 14:00:00', 23250.0, 'Fim'), (259, 40, 'RETURN_TRIP', '2026-04-30 14:30:00', 23250.0, 'Retornando'), (260, 40, 'CHECK_IN', '2026-04-30 16:00:00', 23400.0, 'Base'),
+
+-- Servico 41 a 47 
+(261, 41, 'ARRIVAL_AT_LOCATION', '2026-05-02 11:30:00', 31250.0, 'Chegada'), (262, 41, 'SERVICE_COMPLETION', '2026-05-02 15:00:00', 31250.0, 'Fim'), (263, 41, 'RETURN_TRIP', '2026-05-02 15:30:00', 31250.0, 'Retornando'), (264, 41, 'CHECK_IN', '2026-05-02 17:00:00', 31400.0, 'Base'),
+(265, 42, 'ARRIVAL_AT_LOCATION', '2026-05-03 12:30:00', 6050.0, 'Chegada'), (266, 42, 'SERVICE_COMPLETION', '2026-05-03 14:30:00', 6050.0, 'Fim'), (267, 42, 'RETURN_TRIP', '2026-05-03 15:00:00', 6050.0, 'Retornando'), (268, 42, 'CHECK_IN', '2026-05-03 16:30:00', 6200.0, 'Base'),
+(269, 43, 'ARRIVAL_AT_LOCATION', '2026-05-04 11:00:00', 5050.0, 'Chegada'), (270, 43, 'SERVICE_COMPLETION', '2026-05-04 13:00:00', 5050.0, 'Fim'), (271, 43, 'RETURN_TRIP', '2026-05-04 13:30:00', 5050.0, 'Retornando'), (272, 43, 'CHECK_IN', '2026-05-04 15:00:00', 5200.0, 'Base'),
+(273, 44, 'ARRIVAL_AT_LOCATION', '2026-05-04 11:30:00', 2050.0, 'Chegada'), (274, 44, 'SERVICE_COMPLETION', '2026-05-04 16:00:00', 2050.0, 'Fim'), (275, 44, 'RETURN_TRIP', '2026-05-04 16:30:00', 2050.0, 'Retornando'), (276, 44, 'CHECK_IN', '2026-05-04 18:00:00', 2200.0, 'Base'),
+(277, 45, 'ARRIVAL_AT_LOCATION', '2026-05-05 12:30:00', 16050.0, 'Chegada'), (278, 45, 'SERVICE_COMPLETION', '2026-05-05 13:15:00', 16050.0, 'Fim'), (279, 45, 'RETURN_TRIP', '2026-05-05 13:20:00', 16050.0, 'Retornando'), (280, 45, 'CHECK_IN', '2026-05-05 14:00:00', 16100.0, 'Base'),
+(281, 46, 'ARRIVAL_AT_LOCATION', '2026-05-05 11:30:00', 26050.0, 'Chegada'), (282, 46, 'SERVICE_COMPLETION', '2026-05-05 14:00:00', 26050.0, 'Fim'), (283, 46, 'RETURN_TRIP', '2026-05-05 14:30:00', 26050.0, 'Retornando'), (284, 46, 'CHECK_IN', '2026-05-05 16:00:00', 26200.0, 'Base'),
+(285, 47, 'ARRIVAL_AT_LOCATION', '2026-05-06 12:30:00', 13050.0, 'Chegada'), (286, 47, 'SERVICE_COMPLETION', '2026-05-06 13:30:00', 13050.0, 'Fim'), (287, 47, 'RETURN_TRIP', '2026-05-06 14:00:00', 13050.0, 'Retornando'), (288, 47, 'CHECK_IN', '2026-05-06 15:00:00', 13200.0, 'Base'),
+
+-- -------------------------------------------------------------------------
+-- Servico 48 a 50 (Em Andamento - Apenas as chegadas ao local até o momento)
+-- -------------------------------------------------------------------------
+(289, 48, 'ARRIVAL_AT_LOCATION', '2026-05-07 09:00:00', 95600.0, 'Técnico chegou e iniciou aferição'),
+(290, 49, 'ARRIVAL_AT_LOCATION', '2026-05-07 10:30:00', 4300.0, 'Chegada para transporte'),
+(291, 50, 'ARRIVAL_AT_LOCATION', '2026-05-07 11:00:00', 11900.0, 'Chegada no local da ronda');
 
 
 -- =========================================================================
--- 7. ABASTECIMENTOS (50 abastecimentos, vinculados aos Records PARES)
+-- 7. ABASTECIMENTOS
 -- =========================================================================
 INSERT INTO refuelings (record_id, liters, price_per_liter, total_amount, invoice) VALUES 
 (2, 50.0, 5.80, 290.00, 'NF1001'), (4, 40.0, 5.75, 230.00, 'NF1002'), 
@@ -287,7 +421,7 @@ INSERT INTO refuelings (record_id, liters, price_per_liter, total_amount, invoic
 (98, 45.0, 5.80, 261.00, 'NF1049'), (100, 50.0, 5.75, 287.50, 'NF1050');
 
 -- =========================================================================
--- 8. INCIDENTES (Alguns espalhados para testar o sistema)
+-- 8. INCIDENTES 
 -- =========================================================================
 INSERT INTO incidents (id, service_id, incident_type, location, request_support, description) VALUES 
 (1, 2, 'DEFECT', 'Rodovia Bandeirantes KM 50', TRUE, 'Pneu furado, aguardando socorro'),
@@ -309,7 +443,6 @@ INSERT INTO revinfo (rev, revtstmp) VALUES
 (41, 1777680000000), (42, 1777766400000), (43, 1777852800000), (44, 1777852800000), (45, 1777939200000),
 (46, 1777939200000), (47, 1778025600000), (48, 1778112000000), (49, 1778112000000), (50, 1778112000000);
 
--- Inserindo o status espelho dos serviços criados acima (revtype 0 = Novo Cadastro)
 INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, departure_time, completion_time, departure_km, destination_requester, description, priority, is_active) VALUES 
 (1, 1, 0, 'CAR001', '10001', '2026-01-05 08:00:00', '2026-01-05 17:00:00', 15000.0, 'São Paulo', 'Fiscalização de rotina', 'MEDIUM', 0),
 (2, 2, 0, 'CAR003', '10003', '2026-01-10 09:00:00', '2026-01-10 16:30:00', 8900.0, 'Campinas', 'Visita Técnica', 'MEDIUM', 0),
@@ -321,7 +454,6 @@ INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, depart
 (8, 8, 0, 'CAR010', '10011', '2026-01-28 08:30:00', '2026-01-28 17:30:00', 4000.0, 'Jacareí', 'Verificação Local', 'MEDIUM', 0),
 (9, 9, 0, 'CAR011', '10012', '2026-01-30 07:00:00', '2026-01-30 15:00:00', 1000.0, 'Guarulhos', 'Visita Técnicaização', 'HIGH', 0),
 (10, 10, 0, 'CAR012', '10013', '2026-01-31 08:00:00', '2026-01-31 16:00:00', 15000.0, 'Osasco', 'Fiscalização de Postos', 'MEDIUM', 0),
-
 (11, 11, 0, 'CAR013', '10014', '2026-02-04 08:00:00', '2026-02-04 17:00:00', 25000.0, 'Limeira', 'Aferição de Balanças', 'MEDIUM', 0),
 (12, 12, 0, 'CAR014', '10015', '2026-02-06 07:30:00', '2026-02-06 14:30:00', 3500.0, 'Mogi das Cruzes', 'Vistoria', 'LOW', 0),
 (13, 13, 0, 'CAR015', '10016', '2026-02-09 09:00:00', '2026-02-09 18:00:00', 12000.0, 'Barueri', 'Fiscalização', 'MEDIUM', 0),
@@ -332,7 +464,6 @@ INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, depart
 (18, 18, 0, 'CAR001', '10008', '2026-02-23 09:00:00', '2026-02-23 18:00:00', 15300.0, 'SJC', 'Auditoria Regional', 'HIGH', 0),
 (19, 19, 0, 'CAR002', '10005', '2026-02-25 08:00:00', '2026-02-25 17:00:00', 45500.0, 'Jacareí', 'Fiscalização de Bombas', 'MEDIUM', 0),
 (20, 20, 0, 'CAR003', '10002', '2026-02-28 08:00:00', '2026-02-28 14:00:00', 9300.0, 'Taubaté', 'Vistoria Técnica', 'MEDIUM', 0),
-
 (21, 21, 0, 'CAR004', '10003', '2026-03-02 08:00:00', '2026-03-02 17:00:00', 6000.0, 'São Paulo', 'Inspeção Anual', 'MEDIUM', 0),
 (22, 22, 0, 'CAR005', '10004', '2026-03-05 09:00:00', '2026-03-05 16:00:00', 22500.0, 'Campinas', 'Fiscalização Tacógrafo', 'HIGH', 0),
 (23, 23, 0, 'CAR006', '10006', '2026-03-08 07:30:00', '2026-03-08 14:30:00', 30500.0, 'Sorocaba', 'Acompanhamento', 'LOW', 0),
@@ -343,7 +474,6 @@ INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, depart
 (28, 28, 0, 'CAR012', '10012', '2026-03-24 09:00:00', '2026-03-24 17:30:00', 15500.0, 'Osasco', 'Auditoria', 'MEDIUM', 0),
 (29, 29, 0, 'CAR013', '10013', '2026-03-27 08:00:00', '2026-03-27 16:00:00', 25500.0, 'Limeira', 'Fiscalização', 'MEDIUM', 0),
 (30, 30, 0, 'CAR014', '10014', '2026-03-30 08:00:00', '2026-03-30 15:30:00', 4000.0, 'Mogi das Cruzes', 'Vistoria', 'HIGH', 0),
-
 (31, 31, 0, 'CAR015', '10015', '2026-04-03 08:00:00', '2026-04-03 16:00:00', 12500.0, 'Barueri', 'Fiscalização Comercial', 'MEDIUM', 0),
 (32, 32, 0, 'CAR016', '10016', '2026-04-06 09:00:00', '2026-04-06 17:00:00', 18500.0, 'Atibaia', 'Auditoria', 'MEDIUM', 0),
 (33, 33, 0, 'CAR018', '10017', '2026-04-09 07:30:00', '2026-04-09 15:30:00', 5500.0, 'Piracicaba', 'Visita Técnica', 'LOW', 0),
@@ -354,7 +484,6 @@ INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, depart
 (38, 38, 0, 'CAR003', '10002', '2026-04-24 08:30:00', '2026-04-24 17:30:00', 9600.0, 'Taubaté', 'Fiscalização Têxtil', 'HIGH', 0),
 (39, 39, 0, 'CAR004', '10003', '2026-04-27 07:00:00', '2026-04-27 15:00:00', 6500.0, 'São Paulo', 'Reunião Externa', 'MEDIUM', 0),
 (40, 40, 0, 'CAR005', '10006', '2026-04-30 08:00:00', '2026-04-30 16:00:00', 23000.0, 'Campinas', 'Visita Técnica', 'MEDIUM', 0),
-
 (41, 41, 0, 'CAR006', '10008', '2026-05-02 08:00:00', '2026-05-02 17:00:00', 31000.0, 'Sorocaba', 'Fiscalização Geral', 'MEDIUM', 0),
 (42, 42, 0, 'CAR009', '10009', '2026-05-03 09:00:00', '2026-05-03 16:30:00', 5800.0, 'SJC', 'Entrega', 'LOW', 0),
 (43, 43, 0, 'CAR010', '10010', '2026-05-04 07:30:00', '2026-05-04 15:00:00', 4800.0, 'Jacareí', 'Aferição', 'HIGH', 0),
