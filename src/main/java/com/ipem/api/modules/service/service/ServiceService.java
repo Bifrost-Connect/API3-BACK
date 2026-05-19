@@ -70,6 +70,10 @@ public class ServiceService {
         var user = userRepository.findById(dto.userRegistration())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
+        car.setVehicleStatus(VehicleStatus.IN_USE);
+        car.setAvailable(false);
+        carRepository.save(car); // Guardamos a alteração usando o repositório que já existe
+
         // Monta a nova entidade usando o padrão Builder
         Service newService = Service.builder()
                 .car(car)
@@ -107,6 +111,7 @@ public class ServiceService {
         var car = service.getCar();
         car.setCurrentKm(kmFinal);
         car.setVehicleStatus(VehicleStatus.AVAILABLE);
+        car.setAvailable(true);
         carRepository.save(car);
 
         return serviceRepository.save(service);
