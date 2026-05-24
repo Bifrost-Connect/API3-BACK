@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 /**
  * js/vehicle.js
  * Responsável por: Cadastro, Listagem, Filtros e Seleção de Veículos.
@@ -220,117 +221,174 @@ async function carregarVeiculosDisponiveis() {
 // ===================================================================
 // 3. SELEÇÃO DE VEÍCULO
 // ===================================================================
+=======
+// SELEÇÃO DE VEÍCULO
+>>>>>>> Stashed changes
 let tempVehicle = {};
 
-window.abrirModalConfirmacao = function() {
-    const modal = document.getElementById("modalConfirmacao");
-    if (modal) {
-        modal.style.display = "flex";
-        carregarVeiculosDisponiveis(); // Recarrega a lista para garantir dados frescos
-    }
-};
+window.selecionarVeiculo = async (title, model, brand, type, prefix, licensePlate) => {
+    tempVehicle = { title, model, brand, type, prefix, licensePlate };
 
-window.selecionarVeiculo = (title, model, brand, type, prefix, licensePlate, currentKm) => {
-    // Guarda na variável temporária antes da confirmação final
-    tempVehicle = { title, model, brand, type, prefix, licensePlate, currentKm };
-
-    // Atualiza o DOM do Modal de Detalhes
     if (document.getElementById("fotoVeiculo")) document.getElementById("fotoVeiculo").src = "img/carro 1.jpg";
     if (document.getElementById("modeloVeiculo")) document.getElementById("modeloVeiculo").textContent = model;
     if (document.getElementById("marcaVeiculo")) document.getElementById("marcaVeiculo").textContent = brand;
-    if (document.getElementById("tipoVeiculo")) document.getElementById("tipoVeiculo").textContent = type;
     if (document.getElementById("placaVeiculo")) document.getElementById("placaVeiculo").textContent = licensePlate;
     if (document.getElementById("prefixoVeiculo")) document.getElementById("prefixoVeiculo").textContent = prefix;
-    if (document.getElementById("quilometragem")) document.getElementById("quilometragem").textContent = (currentKm || 0) + " km";
+
+    // Busca automática da quilometragem ao abrir os detalhes do veículo selecionado
+    await buscarUltimaKilometragem(prefix);
 
     if (document.getElementById("modalConfirmacao")) document.getElementById("modalConfirmacao").style.display = "none";
     if (document.getElementById("modalDetalhesVeiculo")) document.getElementById("modalDetalhesVeiculo").style.display = "flex";
 };
+
+// FUNÇÃO DEDICADA: Consome sua API Spring Boot e popula o campo de forma segura
+async function buscarUltimaKilometragem(prefix) {
+    try {
+        const response = await fetch(`http://localhost:8080/vehicle/${prefix}/last-final-km`);
+
+        if (response.ok) {
+            const data = await response.json();
+            const kmInput = document.getElementById("quilometragem-inicial");
+
+            if (kmInput) {
+                // Caso o retorno do banco venha null/undefined por ser o primeiro uso do veículo, define como 0
+                kmInput.value = (data.lastFinalKm !== undefined && data.lastFinalKm !== null) ? data.lastFinalKm : 0;
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao buscar KM final:", error);
+        mostrarToast("Erro ao conectar ao servidor para obter quilometragem.");
+    }
+}
 
 window.voltarParaVeiculos = () => {
     if (document.getElementById("modalDetalhesVeiculo")) document.getElementById("modalDetalhesVeiculo").style.display = "none";
     if (document.getElementById("modalConfirmacao")) document.getElementById("modalConfirmacao").style.display = "flex";
 };
 
-// Confirma o uso do veículo e prepara o painel lateral de Check-in
+// CONFIRMAR CHECK-IN
 window.confirmarVeiculo = () => {
     localStorage.setItem("selectedVehicle", JSON.stringify(tempVehicle));
+    localStorage.setItem("activeServiceId", "12345");
+    fecharTodosModais();
 
-    const inputKm = document.getElementById("quilometragem-inicial");
-    const inputData = document.getElementById("data-inicial");
-    const inputHora = document.getElementById("horario-inicial");
-
-    // Preenche KM automaticamente e seta Data/Hora atuais
-    if (inputKm) inputKm.value = tempVehicle.currentKm;
-    const agora = new Date();
-    if (inputData) inputData.value = new Date(agora.getTime() - (agora.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    if (inputHora) inputHora.value = agora.toTimeString().split(' ')[0].substring(0, 5);
-
-    // Esconde o botão de selecionar e mostra os inputs do check-in
-    const secaoPosCheckin = document.getElementById('secao-pos-checkin');
-    const infoVeiculoDados = document.getElementById('info-veiculo-dados');
-    const containerCheckinBotao = document.getElementById('container-checkin-botao');
-
-    if (secaoPosCheckin) secaoPosCheckin.style.display = 'block';
-    if (infoVeiculoDados) infoVeiculoDados.style.display = 'block';
-    if (containerCheckinBotao) containerCheckinBotao.style.display = 'none';
-
-    // Exibe os dados do veículo selecionado na sidebar
-    if (document.getElementById('display-modelo')) document.getElementById('display-modelo').textContent = tempVehicle.model;
-    if (document.getElementById('display-placa')) document.getElementById('display-placa').textContent = tempVehicle.licensePlate;
-    if (document.getElementById('display-prefixo')) document.getElementById('display-prefixo').textContent = tempVehicle.prefix;
-
-    const modalDet = document.getElementById("modalDetalhesVeiculo");
-    if (modalDet) modalDet.style.display = "none";
+    if (window.location.pathname.includes("chamados.html")) {
+        window.location.href = "telainicial.html";
+    } else {
+        if (typeof carregarDadosTelaInicial === "function") carregarDadosTelaInicial();
+        // Garante a atualização da quilometragem diretamente no painel da tela inicial ao confirmar
+        buscarUltimaKilometragem(tempVehicle.prefix);
+    }
 };
 
-// ===================================================================
-// 4. SISTEMA DE FILTROS DO MODAL
-// ===================================================================
-window.abrirModalFiltro = function () {
-    const modal = document.getElementById('modalFiltroAvancado');
-    if (modal) modal.style.display = 'flex';
+// SALVAR INFORMAÇÕES DO VEÍCULO (API)
+window.salvarVeiculoInfo = async function () {
+    const mileageInput = document.getElementById("quilometragem-inicial")?.value;
+    const notesInput = document.getElementById("observacoes")?.value;
+
+    localStorage.setItem("km", mileageInput);
+    localStorage.setItem("obs", notesInput);
+
+    const vehicle = JSON.parse(localStorage.getItem('selectedVehicle'));
+
+    if (vehicle && vehicle.prefix) {
+        try {
+            await fetch(`http://localhost:8080/vehicle/${vehicle.prefix}/update-data`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mileage: mileageInput,
+                    observations: notesInput
+                })
+            });
+
+            // Alterado para executar a lógica de UI correta do check-in após o sucesso da requisição
+            alterarLayoutPosCheckin();
+            mostrarToast1("Dados salvos!");
+        } catch (error) {
+            console.error("API error:", error);
+            mostrarToast("Salvo localmente.");
+        }
+    }
 };
 
-window.fecharModalFiltro = function () {
-    const modal = document.getElementById('modalFiltroAvancado');
-    if (modal) modal.style.display = 'none';
+// CADASTRAR VEÍCULO
+window.cadastrarVeiculo = async function () {
+    const payload = {
+        prefix: document.getElementById("cad-prefixo")?.value,
+        licensePlate: document.getElementById("cad-placa")?.value,
+        typeId: document.getElementById("cad-tipo")?.value,
+        color: document.getElementById("cad-cor")?.value,
+        fuel: document.getElementById("cad-combustivel")?.value,
+        currentKm: 0,
+        nextOilChangeKm: 0
+    };
+
+    try {
+        const response = await fetch("http://localhost:8080/vehicle/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            mostrarToast1("Veículo cadastrado com sucesso!");
+        } else {
+            mostrarToast("Erro ao cadastrar veículo.");
+        }
+
+    } catch (error) {
+        console.error("API error:", error);
+        mostrarToast("Erro de conexão.");
+    }
 };
 
-window.aplicarFiltros = function () {
-    const pesquisa = document.getElementById('inputPesquisa')?.value.toUpperCase() || "";
-    const tipo = document.getElementById('filtroTipo')?.value.toUpperCase() || "TODOS";
-    const marca = document.getElementById('filtroMarca')?.value.toUpperCase() || "TODOS";
+// ABRIR FILTRO
+function abrirModalFiltro() {
+    document.getElementById('modalFiltroAvancado').style.display = 'flex';
+}
+
+function fecharModalFiltro() {
+    document.getElementById('modalFiltroAvancado').style.display = 'none';
+}
+
+function aplicarFiltros() {
+    const pesquisa = document.getElementById('inputPesquisa').value.toUpperCase();
+    const tipo = document.getElementById('filtroTipo').value.toUpperCase();
+
     const botoes = document.querySelectorAll('.btn-veiculo');
 
     botoes.forEach(btn => {
         const txtBotao = btn.textContent.toUpperCase();
-        const vTipo = (btn.getAttribute('data-tipo') || "").toUpperCase();
-        const vMarca = (btn.getAttribute('data-marca') || "").toUpperCase();
+        const vTipo = btn.getAttribute('data-tipo').toUpperCase();
 
         const batePesquisa = txtBotao.includes(pesquisa);
         const bateTipo = (tipo === "TODOS" || vTipo === tipo);
-        const bateMarca = (marca === "TODOS" || vMarca === marca);
 
-        if (batePesquisa && bateTipo && bateMarca) {
+        if (batePesquisa && bateTipo) {
             btn.style.display = "block";
         } else {
             btn.style.display = "none";
         }
     });
+
     fecharModalFiltro();
-};
+}
 
-window.filtrarVeiculos = () => aplicarFiltros();
+function filtrarVeiculos() {
+    aplicarFiltros();
+}
 
-// ===================================================================
-// 5. INICIALIZAÇÃO DE EVENTOS DOM
-// ===================================================================
-document.addEventListener("DOMContentLoaded", () => {
-    // Carrega dados base dependendo de qual tela o usuário está
-    if (document.getElementById("cad-tipo")) carregarTiposVeiculo();
-    if (document.getElementById("listaVeiculos")) carregarVeiculosDisponiveis();
+// POPUPS
+const popupConfirmacao = document.getElementById('popupConfirmacao');
+const popupSucesso = document.getElementById('popupSucesso');
+const btncadastrar = document.getElementById('btncadastrar');
+const btnCancelar = document.getElementById('btn-cancelar-confirmacao');
+const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
+const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
 
+<<<<<<< Updated upstream
     // NOVO: Carrega filtros dinamicamente
     carregarFiltrosDinamicos();
 
@@ -338,17 +396,77 @@ document.addEventListener("DOMContentLoaded", () => {
     const popupConfirmacaoCad = document.getElementById('popupConfirmacao');
     const btncadastrar = document.getElementById('btncadastrar');
     const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
+=======
+btncadastrar?.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'flex';
+});
+>>>>>>> Stashed changes
 
-    if (btncadastrar && popupConfirmacaoCad) {
-        btncadastrar.addEventListener('click', () => {
-            popupConfirmacaoCad.style.display = 'flex';
-        });
+btnCancelar?.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'none';
+});
+
+btnConfirmarFinal?.addEventListener('click', (e) => {
+    e.preventDefault();
+    popupConfirmacao.style.display = 'none';
+    popupSucesso.style.display = 'flex';
+});
+
+btnFecharSucesso?.addEventListener('click', () => {
+    popupSucesso.style.display = 'none';
+});
+
+// TOAST
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = message; // Atribuindo dinamicamente a mensagem informada
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
     }
+}
 
-    if (btnConfirmarFinal) {
-        btnConfirmarFinal.onclick = (e) => {
-            e.preventDefault();
-            cadastrarVeiculo();
-        };
+function mostrarToast1(mensagem) {
+    const toast = document.getElementById("toast-aviso1");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+}
+
+// UI CHECK-IN
+// Alterada a assinatura de "salvarVeiculoInfo" para evitar conflito com a requisição da API
+function alterarLayoutPosCheckin() {
+    document.getElementById('grupo-km-inicial').style.display = 'none';
+    document.getElementById('btn-salvar-veiculo').style.display = 'none';
+    document.getElementById('btn-cancelar-veiculo').style.display = 'none';
+
+    document.getElementById('grupo-km-final').style.display = 'block';
+    document.getElementById('btn-abs-veiculo').style.display = 'inline-block';
+    document.getElementById('btn-checkout').style.display = 'inline-block';
+}
+
+function cancelarVeiculoInfo() {
+    document.getElementById('secao-pos-checkin').style.display = 'none';
+    document.getElementById('info-veiculo-dados').style.display = 'none';
+    document.getElementById('container-checkin-botao').style.display = 'block';
+}
+
+// PERSISTÊNCIA AUTOMÁTICA: Busca o KM no Spring Boot caso a página seja atualizada com o veículo ativo
+document.addEventListener("DOMContentLoaded", () => {
+    const savedVehicle = JSON.parse(localStorage.getItem('selectedVehicle'));
+    if (savedVehicle && savedVehicle.prefix) {
+        buscarUltimaKilometragem(savedVehicle.prefix);
     }
 });

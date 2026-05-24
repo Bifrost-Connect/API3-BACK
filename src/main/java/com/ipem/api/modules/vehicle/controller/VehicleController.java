@@ -1,7 +1,11 @@
 package com.ipem.api.modules.vehicle.controller;
 
 import com.ipem.api.modules.vehicle.dto.CarUpdateDTO;
+<<<<<<< Updated upstream
 import com.ipem.api.modules.vehicle.dto.FuelRequestDTO;
+=======
+import com.ipem.api.modules.vehicle.dto.VehicleKmResponseDTO;
+>>>>>>> Stashed changes
 import com.ipem.api.modules.vehicle.model.Car;
 import com.ipem.api.modules.vehicle.service.VehicleService;
 import jakarta.validation.Valid;
@@ -21,9 +25,15 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
+<<<<<<< Updated upstream
     @PatchMapping("/{prefix}/update-data")
     public ResponseEntity<?> updateData(@PathVariable String prefix,
                                         @RequestBody @Valid CarUpdateDTO data) {
+=======
+    // Buscas GET
+    @GetMapping
+    public ResponseEntity<?> listAllCars() {
+>>>>>>> Stashed changes
         try {
             vehicleService.updateKmAndObs(prefix.trim(), data.mileage(), data.observations());
             return ResponseEntity.ok(Map.of("message", "Dados do veículo atualizados com sucesso!"));
@@ -65,9 +75,26 @@ public class VehicleController {
         }
     }
 
+<<<<<<< Updated upstream
 
     @GetMapping
     public ResponseEntity<?> listVehicles() {
+=======
+    @GetMapping("/{prefix}/last-final-km")
+    public ResponseEntity<?> getLastFinalKm(@PathVariable String prefix) {
+        try {
+            Float lastKm = vehicleService.findLastFinalKmByPrefix(prefix.trim());
+            return ResponseEntity.ok(new VehicleKmResponseDTO(lastKm));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Cadastros e Atualizações
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerCar(@RequestBody @Valid Car car) {
+>>>>>>> Stashed changes
         try {
             return ResponseEntity.ok(vehicleService.findAllCars());
         } catch (Exception e) {

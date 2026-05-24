@@ -1,82 +1,512 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIVA</title>
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
 
-  <body>
-    <div class="quadrado">
-      <div class="image">
-        <img src="img/logosiva.png" alt="logo do sistema" />
-      </div>
+    <link rel="stylesheet" href="css/style.css">
 
-      <div class="emailsenha">
+    <style>
+
+        /* =========================
+           MODAL
+        ========================== */
+
+        .sobreposicao {
+
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.5);
+
+            z-index: 9999;
+
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-card {
+
+            background: white;
+
+            width: 400px;
+            max-width: 90%;
+
+            border-radius: 18px;
+
+            padding: 30px;
+
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+            animation: aparecer 0.2s ease;
+        }
+
+        @keyframes aparecer {
+
+            from {
+
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .popup-titulo {
+
+            color: #2F4D98;
+
+            font-size: 24px;
+
+            margin-bottom: 20px;
+
+            text-align: center;
+        }
+
+        .popup-conteudo {
+
+            margin-top: 20px;
+        }
+
+        .btn-container {
+
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 30px;
+        }
+
+        .btn-voltar,
+        .btn-aceitar {
+
+            flex: 1;
+
+            border: none;
+
+            border-radius: 10px;
+
+            padding: 12px;
+
+            font-size: 15px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .btn-voltar {
+
+            background: #d9d9d9;
+
+            color: #333;
+        }
+
+        .btn-aceitar {
+
+            background: #2F4D98;
+
+            color: white;
+        }
+
+        .btn-aceitar:hover {
+
+            background: #243c77;
+        }
+
+        /* =========================
+           INPUT FLUTUANTE
+        ========================== */
+
+        .inputGroup1 {
+
+            position: relative;
+
+            margin-top: 10px;
+        }
+
+        .inputGroup1 input {
+
+            width: 100%;
+
+            padding: 14px 10px;
+
+            border: 2px solid #2F4D98;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font-size: 15px;
+
+            box-sizing: border-box;
+        }
+
+        .inputGroup1 label {
+
+            position: absolute;
+
+            left: 10px;
+            top: 14px;
+
+            background: white;
+
+            padding: 0 5px;
+
+            color: #777;
+
+            transition: 0.2s ease;
+
+            pointer-events: none;
+        }
+
+        .inputGroup1 input:focus + label,
+        .inputGroup1 input:valid + label {
+
+            top: -10px;
+
+            left: 8px;
+
+            font-size: 12px;
+
+            color: #2F4D98;
+        }
+
+        /* ESTILO PARA O ELEMENTO DE TOAST FIXO DO AUTH.JS */
+        #toast-aviso {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2F4D98;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 999999999;
+            transition: opacity 0.5s ease;
+        }
+
+        .toast-hidden {
+            opacity: 0;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div id="toast-aviso"></div>
+
+<div class="quadrado">
+
+    <div class="image">
+
+        <img src="img/logosiva.png" alt="logo do sistema">
+
+    </div>
+
+    <div class="emailsenha">
+
         <div class="email">
-          <div class="inputGroup1">
-            <input type="text" id="matricula" name="username" required />
-            <label for="matricula">Matrícula</label>
-          </div>
+
+            <div class="inputGroup1">
+
+                <input type="text"
+                       id="matricula"
+                       required>
+
+                <label for="matricula">
+
+                    Matrícula
+
+                </label>
+
+            </div>
+
         </div>
 
         <div class="senha">
-          <div class="inputGroup2">
-            <input
-              type="password"
-              id="senha"
-              name="password"
-              required
-              autocomplete="current-password"
-            />
-            <label for="senha">Senha</label>
-            <div
-              id="toggleSenha"
-              onclick="togglePassword()"
-              class="eye-wrapper"
-            >
-              <svg
-                id="eyeIcon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#2F4D98"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-                <line
-                  id="eyeLine"
-                  x1="1"
-                  y1="1"
-                  x2="23"
-                  y2="23"
-                  style="display: none; stroke: #2f4d98"
-                ></line>
-              </svg>
+
+            <div class="inputGroup1">
+
+                <input type="password"
+                       id="senha"
+                       required>
+
+                <label for="senha">
+
+                    Senha
+
+                </label>
+
             </div>
-          </div>
+
         </div>
 
         <div class="esenha">
-          <p style="cursor: pointer">Esqueceu a senha? Clique aqui</p>
-        </div>
-      </div>
 
-      <div class="btnentrar">
-        <button id="btn1" onclick="btnindex()">Entrar</button>
-      </div>
+            <p
+                    style="cursor: pointer;"
+                    onclick="abrirModalRecuperacao()">
+
+                Esqueceu a senha? Clique aqui
+
+            </p>
+
+        </div>
+
     </div>
 
-    <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
-    <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+    <div class="btnentrar">
 
-    <script src="js/basic.js"></script>
-    <script src="js/auth.js"></script>
-  </body>
+        <button id="btn1" onclick="btnindex()">
+
+            Entrar
+
+        </button>
+
+    </div>
+
+</div>
+
+<div id="modalRecuperarSenha"
+     class="sobreposicao">
+
+    <div class="popup-card">
+
+        <h2 class="popup-titulo">
+
+            Recuperar Senha
+
+        </h2>
+
+        <div class="popup-conteudo">
+
+            <p style="margin-bottom: 20px;">
+
+                Informe seu e-mail para recuperação da senha.
+
+            </p>
+
+            <div class="inputGroup1">
+
+                <input type="email"
+                       id="email-recuperacao"
+                       required>
+
+                <label for="email-recuperacao">
+
+                    E-mail
+
+                </label>
+
+            </div>
+
+        </div>
+
+        <div class="btn-container">
+
+            <button type="button"
+                    class="btn-voltar"
+                    onclick="fecharModalRecuperacao()">
+
+                Cancelar
+
+            </button>
+
+            <button type="button"
+                    class="btn-aceitar"
+                    onclick="enviarRecuperacaoSenha()">
+
+                Enviar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    // Abrir modal
+
+    function abrirModalRecuperacao() {
+
+        document
+            .getElementById("modalRecuperarSenha")
+            .style.display = "flex";
+
+        // Foca automaticamente no campo de e-mail ao abrir o modal
+        setTimeout(() => {
+            document.getElementById("email-recuperacao").focus();
+        }, 100);
+    }
+
+    // Fecha
+
+    function fecharModalRecuperacao() {
+
+        document
+            .getElementById("modalRecuperarSenha")
+            .style.display = "none";
+    }
+
+    // Fecha quando clica fora
+
+    document
+        .getElementById("modalRecuperarSenha")
+        .addEventListener("click", function(event) {
+
+            if (event.target.id === "modalRecuperarSenha") {
+
+                fecharModalRecuperacao();
+            }
+        });
+
+    // Enter
+    document
+        .getElementById("email-recuperacao")
+        .addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                enviarRecuperacaoSenha();
+            }
+        });
+
+
+
+    function mostrarToastModal(mensagem) {
+
+        // Remove toast antigo
+        const toastExistente =
+            document.getElementById("toast-dinamico");
+
+        if (toastExistente) {
+
+            toastExistente.remove();
+        }
+
+
+        const toast =
+            document.createElement("div");
+
+        toast.id = "toast-dinamico";
+
+        toast.innerText = message = mensagem;
+
+        // Style
+        toast.style.position = "fixed";
+
+        toast.style.top = "20px";
+
+        toast.style.right = "20px";
+
+        toast.style.background = "#2F4D98";
+
+        toast.style.color = "white";
+
+        toast.style.padding = "14px 22px";
+
+        toast.style.borderRadius = "10px";
+
+        toast.style.fontSize = "14px";
+
+        toast.style.fontWeight = "bold";
+
+        toast.style.boxShadow =
+            "0 5px 15px rgba(0,0,0,0.2)";
+
+        toast.style.zIndex = "999999999";
+
+        toast.style.opacity = "0";
+
+        toast.style.transition =
+            "opacity 0.3s ease";
+
+
+        document.body.appendChild(toast);
+
+
+        setTimeout(() => {
+
+            toast.style.opacity = "1";
+
+        }, 50);
+
+
+        setTimeout(() => {
+
+            toast.style.opacity = "0";
+
+            setTimeout(() => {
+
+                toast.remove();
+
+            }, 300);
+
+        }, 3000);
+    }
+
+    // enviar o email
+
+    function enviarRecuperacaoSenha() {
+
+        const email =
+            document.getElementById("email-recuperacao").value;
+
+        // Validação
+        if (email.trim() === "") {
+
+            mostrarToastModal("Digite um e-mail.");
+
+            return;
+        }
+
+        // Formato do email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+
+            mostrarToastModal("Insira um e-mail válido");
+
+            return;
+        }
+
+        // Fecha o Modal
+        fecharModalRecuperacao();
+
+        // Limpa input
+        document
+            .getElementById("email-recuperacao")
+            .value = "";
+
+        // Mostra a mensagem
+        mostrarToastModal(
+            "E-mail enviado com sucesso!"
+        );
+    }
+
+</script>
+
+<script src="js/auth.js"></script>
+
+</body>
 </html>

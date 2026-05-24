@@ -1,251 +1,112 @@
-/**
- * js/service.js
- * Responsável por: Check-in, Check-out, Abastecimento e Transições de UI do Chamado Ativo.
- */
-
-// ===================================================================
-// 1. CHECK-IN
-// ===================================================================
-window.salvarVeiculoInfo = async function () {
+// --- CHECK-IN (Ao clicar em Salvar na tela inicial após escolher o carro) ---
+window.salvarVeiculoInfo = async function() {
     const kmInput = document.getElementById("quilometragem-inicial")?.value;
-    const dataInput = document.getElementById("data-inicial")?.value;
-    const horaInput = document.getElementById("horario-inicial")?.value;
-    const obsInput = document.getElementById("observacoes")?.value || "";
-
+    const obsInput = document.getElementById("observacoes")?.value;
     const matricula = localStorage.getItem("userRegistration");
-    const vehicleData = localStorage.getItem('selectedVehicle');
+    const vehicle = JSON.parse(localStorage.getItem('selectedVehicle'));
 
-    if (!vehicleData || !matricula) {
-        window.mostrarToast("Erro: Matrícula do usuário ou veículo não encontrados.");
+    if (!vehicle || !matricula) {
+        mostrarToast("Erro: Matrícula do usuário ou veículo não encontrados.");
         return;
     }
-
-    if (!kmInput || !dataInput || !horaInput) {
-        window.mostrarToast("Por favor, preencha KM, Data e Horário iniciais.");
-        return;
-    }
-
-    const vehicle = JSON.parse(vehicleData);
 
     try {
-        const response = await apiFetch("/service/start", {
+        const response = await fetch("http://localhost:8080/service/start", {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                carPrefix: vehicle.prefix.trim(),
+                carPrefix: vehicle.prefix,
                 userRegistration: matricula,
                 recordKm: parseFloat(kmInput),
-                note: obsInput,
-                destinationRequester: "Não informado",
-                priority: "MEDIUM"
+                note: obsInput
             })
         });
 
-        if (response && response.ok) {
+        if (response.ok) {
             const data = await response.json();
-
-            // Salva o ID do serviço gerado pelo Backend para uso no check-out/abastecimento
-            const idServico = data.serviceId || data.id;
-            localStorage.setItem("activeServiceId", idServico);
-            localStorage.setItem("km", kmInput); // Salva o KM inicial para validação futura
+            // Salva o ID do serviço rodando para podermos fazer o check-out depois
+            localStorage.setItem("activeServiceId", data.serviceId);
+            localStorage.setItem("km", kmInput);
             localStorage.setItem("obs", obsInput);
-
-            // Exibe toast de sucesso (usando o toast-aviso1 configurado no seu CSS para verde)
-            window.mostrarToast("Check-in confirmado no sistema!", "toast-aviso1");
-
-            // Alterna a interface para o modo "Em Serviço"
-            if (typeof transicaoPosCheckin === "function") transicaoPosCheckin();
+            mostrarToast1("Check-in confirmado no sistema!");
         } else {
-            const erro = await response.json();
-            window.mostrarToast("Erro: " + (erro.error || "Falha no check-in"));
+            mostrarToast("Erro ao realizar check-in no banco.");
         }
     } catch (error) {
         console.error("Erro na API:", error);
-        window.mostrarToast("Falha de conexão com o servidor.");
     }
 };
 
-// ===================================================================
-// 2. CHECK-OUT
-// ===================================================================
+
+// --- CHECK-OUT ---
 window.checkoutChamado = async () => {
     const serviceId = localStorage.getItem("activeServiceId");
 
-    // Pega APENAS o valor do input final e o valor inicial salvo no check-in
-    const inputFinal = document.getElementById("quilometragem-final")?.value;
-    const kmInicialSalvo = parseFloat(localStorage.getItem("km")) || 0;
+    // Pega o valor atual do input de KM para ser o KM de chegada
+    const kmFinal = document.getElementById("quilometragem-inicial")?.value;
 
     if (!serviceId) {
-        window.mostrarToast("Nenhum serviço ativo encontrado para fazer check-out.");
-        return;
-    }
-
-    // 1ª Validação: Impede Check-out com campo vazio
-    if (!inputFinal || inputFinal.trim() === "") {
-        window.mostrarToast("Por favor, insira a quilometragem final de chegada.");
-        return;
-    }
-
-    const kmFinalValue = parseFloat(inputFinal);
-
-    // 2ª Validação: Impede Check-out se KM Final for menor que KM Inicial
-    if (kmFinalValue < kmInicialSalvo) {
-        window.mostrarToast(`Erro: A KM Final (${kmFinalValue}) não pode ser menor que a Inicial (${kmInicialSalvo}).`);
+        mostrarToast("Nenhum serviço ativo encontrado para fazer check-out.");
         return;
     }
 
     try {
-        const response = await apiFetch(`/service/finalize/${serviceId}`, {
+        const response = await fetch(`http://localhost:8080/service/finalize/${serviceId}`, {
             method: "POST",
-            body: JSON.stringify({
-                recordKm: kmFinalValue
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({recordKm: parseFloat(kmFinal) })
         });
 
-        if (response && response.ok) {
-            // Limpa o estado da sessão de trabalho
+        if (response.ok) {
+            // Limpa o navegador
             localStorage.removeItem("selectedVehicle");
             localStorage.removeItem("km");
             localStorage.removeItem("obs");
             localStorage.removeItem("activeServiceId");
 
-            const popupSuc = document.getElementById("popupSucesso");
-            const msgSucesso = document.getElementById("mensagem-sucesso");
-
-            if (popupSuc) {
-                if (msgSucesso) msgSucesso.textContent = "Check-out realizado com sucesso!";
-                popupSuc.style.display = "flex";
-                popupSuc.setAttribute("data-action", "checkout");
-            } else {
-                window.mostrarToast("Check-out realizado com sucesso!", "toast-aviso1");
-                setTimeout(() => window.location.reload(), 2000);
-            }
+            // Abre o modal de sucesso do HTML
+            const modal = document.getElementById("modalAvisoCheckout");
+            if (modal) modal.style.display = "flex";
         } else {
-            const erro = await response.json();
-            window.mostrarToast("Erro: " + (erro.error || "Falha no check-out"));
+            mostrarToast("Erro ao fazer o check-out no servidor.");
         }
     } catch (error) {
         console.error("Erro na API de Checkout:", error);
-        window.mostrarToast("Falha de conexão com o servidor.");
     }
 };
 
-// ===================================================================
-// 3. ABASTECIMENTO
-// ===================================================================
-window.abrirPopupAbastecimento = function() {
-    const popup = document.getElementById('popupAbastecimento');
-    if (popup) popup.style.display = 'flex';
+window.finalizarCheckout = () => {
+    window.location.reload();
 };
 
-window.registrarAbastecimento = async function () {
-    const serviceId = localStorage.getItem("activeServiceId");
-    const litros = document.getElementById("litros-abastecimento")?.value;
-    const preco = document.getElementById("preco-litro")?.value;
-    const data = document.getElementById("data-abastecimento")?.value;
-    const hora = document.getElementById("hora-abastecimento")?.value;
+//Função para mostrar o Toast
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
 
-    if (!serviceId) {
-        window.mostrarToast("Nenhum serviço ativo. Faça o check-in primeiro.");
-        return;
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
     }
+}
 
-    if (!litros || !preco || !data || !hora) {
-        window.mostrarToast("Preencha Litros, Preço, Data e Horário.");
-        return;
+//Função para mostrar o Toast
+function mostrarToast1(mensagem) {
+    const toast = document.getElementById("toast-aviso1");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
     }
-
-    const valorTotal = (parseFloat(litros) * parseFloat(preco)).toFixed(2);
-    const dataHoraIso = `${data}T${hora}:00`;
-
-    try {
-        const response = await apiFetch(`/service/${serviceId}/fuel`, {
-            method: 'POST',
-            body: JSON.stringify({
-                amount: parseFloat(litros),
-                totalValue: parseFloat(valorTotal),
-                date: dataHoraIso
-            })
-        });
-
-        if (response && response.ok) {
-            // Fecha os modais de abastecimento
-            const popupConfAbs = document.getElementById('popupConfirmacaoAbs');
-            const popupAbs = document.getElementById('popupAbastecimento');
-            if (popupConfAbs) popupConfAbs.style.display = 'none';
-            if (popupAbs) popupAbs.style.display = 'none';
-
-            // Abre o popup genérico de sucesso
-            const popupSuc = document.getElementById('popupSucesso');
-            const msgSucesso = document.getElementById("mensagem-sucesso");
-
-            if (popupSuc) {
-                if (msgSucesso) msgSucesso.textContent = "Abastecimento registrado com sucesso!";
-                popupSuc.style.display = 'flex';
-                popupSuc.setAttribute("data-action", "abastecimento");
-            } else {
-                window.mostrarToast("Abastecimento registrado!", "toast-aviso1");
-            }
-        } else {
-            const erro = await response.json();
-            window.mostrarToast("Erro ao abastecer: " + (erro.error || ""));
-        }
-    } catch (error) {
-        console.error("Erro na requisição de abastecimento:", error);
-        window.mostrarToast("Falha ao conectar com o servidor.");
-    }
-};
-
-// ===================================================================
-// 4. CONTROLES DE INTERFACE (UI)
-// ===================================================================
-
-// Gerencia a ação do botão "OK" no popup de sucesso dinamicamente
-window.fecharSucesso = function() {
-    const popupSuc = document.getElementById('popupSucesso');
-    if (!popupSuc) return;
-
-    const action = popupSuc.getAttribute("data-action");
-    popupSuc.style.display = 'none';
-
-    if (action === "checkin") {
-        // Apenas fecha o popup, o usuário continua na tela inicial com o painel alterado
-    } else {
-        // Checkout ou Abastecimento atualizam a tela
-        window.location.reload();
-    }
-};
-
-// Esconde botão de Check-in e exibe os botões de Check-out e Abastecimento
-window.transicaoPosCheckin = function () {
-    const IDsEsconder = ['grupo-km-inicial', 'btn-salvar-veiculo', 'btn-cancelar-veiculo'];
-    IDsEsconder.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-
-    const IDsMostrar = ['grupo-km-final', 'btn-abs-veiculo', 'btn-checkout'];
-    IDsMostrar.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'inline-block';
-    });
-
-    // AUTO-PREENCHIMENTO: Deixa a KM Inicial no campo final como ponto de partida
-    const inputKmFinal = document.getElementById("quilometragem-final");
-    const kmInicialSalvo = localStorage.getItem("km");
-    if (inputKmFinal && kmInicialSalvo) {
-        inputKmFinal.value = kmInicialSalvo;
-    }
-};
-
-// Cancela o processo de check-in e limpa a seleção temporária
-window.cancelarVeiculoInfo = function () {
-    const secaoPosCheckin = document.getElementById('secao-pos-checkin');
-    const infoVeiculoDados = document.getElementById('info-veiculo-dados');
-    const containerCheckinBotao = document.getElementById('container-checkin-botao');
-
-    if (secaoPosCheckin) secaoPosCheckin.style.display = 'none';
-    if (infoVeiculoDados) infoVeiculoDados.style.display = 'none';
-    if (containerCheckinBotao) containerCheckinBotao.style.display = 'block';
-
-    localStorage.removeItem("selectedVehicle");
-};
+}

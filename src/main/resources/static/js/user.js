@@ -1,110 +1,95 @@
-/**
- * js/user.js (ou cadusuarios.js)
- * Responsável por: Cadastro de novos usuários (Técnicos) no sistema.
- */
-
-// ===================================================================
-// 1. INTEGRAÇÃO COM A API: CADASTRAR USUÁRIO
-// ===================================================================
-window.cadastrarUsuario = async function () {
+// CADASTRAR USUÁRIO
+window.cadastrarUsuario = async function() {
     const nameInput = document.getElementById("cadNome")?.value;
     const emailInput = document.getElementById("cadEmail")?.value;
     const registrationInput = document.getElementById("cadMatricula")?.value;
     const passwordInput = document.getElementById("cadSenha")?.value;
 
     if (!nameInput || !emailInput || !registrationInput || !passwordInput) {
-        window.mostrarToast("Preencha todos os campos obrigatórios!");
+        mostrarToast("Preencha todos os campos!");
         return;
     }
 
-    // Payload compatível com o RegisterDTO do backend Spring Boot
+    // Payload compatível com RegisterDTO / backend Spring Boot
     const payload = {
-        registration: registrationInput.trim(),
-        name: nameInput.trim(),
-        email: emailInput.trim(),
+        registration: registrationInput,
+        name: nameInput,
+        email: emailInput,
         password: passwordInput,
-        permission: "TECHNICIAN" // Mantido em maiúsculo pelo padrão do Enum no Java
+        permission: "technician"
     };
 
     try {
-        const response = await apiFetch("/user/register", {
+        const response = await fetch("http://localhost:8080/user/register", {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        if (response && response.ok) {
-            // Sucesso: Troca os modais visuais
-            const popupConf = document.getElementById('popupConfirmacao');
-            const popupSuc = document.getElementById('popupSucesso');
-
-            if (popupConf) popupConf.style.display = 'none';
-            if (popupSuc) {
-                popupSuc.style.display = 'flex';
-            } else {
-                window.mostrarToast("Usuário cadastrado com sucesso!", "toast-aviso1");
+        if (response.ok) {
+            if (typeof abrirModalConfirmacao === "function") {
+                abrirModalConfirmacao();
             }
 
-            limparFormularioUsuario();
-        } else if (response) {
-            // Tenta extrair a mensagem de erro formatada do Spring Boot
-            const erro = await response.json().catch(() => ({}));
-            const mensagemErro = erro.error || erro.message || "Verifique os dados informados.";
-            window.mostrarToast("Erro ao cadastrar: " + mensagemErro);
+            // Limpa os campos após sucesso
+            ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.value = "";
+            });
+
+        } else {
+            const errorMsg = await response.text();
+            mostrarToast("Erro ao cadastrar: " + errorMsg);
         }
+
     } catch (error) {
-        console.error("Erro na requisição de cadastro:", error);
-        window.mostrarToast("Falha de conexão com o servidor.");
+        console.error("Connection error:", error);
+        mostrarToast("Erro de conexão com o servidor.");
     }
 };
 
-// ===================================================================
-// 2. FUNÇÕES AUXILIARES DE UI
-// ===================================================================
-function limparFormularioUsuario() {
-    ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) field.value = "";
-    });
-}
+// salvar info
 
-// ===================================================================
-// 3. INICIALIZAÇÃO DE EVENTOS DOM (Popups e Botões)
-// ===================================================================
-document.addEventListener("DOMContentLoaded", () => {
-    const popupConfirmacao = document.getElementById('popupConfirmacao');
-    const popupSucesso = document.getElementById('popupSucesso');
+const popupConfirmacao = document.getElementById('popupConfirmacao');
+const popupSucesso = document.getElementById('popupSucesso');
+const btncadastrar = document.getElementById('btncadastrar');
+const btnCancelar = document.getElementById('btn-cancelar-confirmacao');
+const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
+const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
 
-    const btnCadastrar = document.getElementById('btncadastrar');
-    const btnCancelarConf = document.getElementById('btn-cancelar-confirmacao');
-    const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
-    const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
-
-    // Abre a tela de confirmação antes de salvar
-    if (btnCadastrar && popupConfirmacao) {
-        btnCadastrar.addEventListener('click', () => {
-            popupConfirmacao.style.display = 'flex';
-        });
-    }
-
-    // Cancela a ação e fecha o modal
-    if (btnCancelarConf && popupConfirmacao) {
-        btnCancelarConf.addEventListener('click', () => {
-            popupConfirmacao.style.display = 'none';
-        });
-    }
-
-    // Confirma a ação e dispara a requisição para a API
-    if (btnConfirmarFinal) {
-        btnConfirmarFinal.addEventListener('click', (e) => {
-            e.preventDefault(); // Bloqueia o refresh da página (essencial em formulários)
-            window.cadastrarUsuario();
-        });
-    }
-
-    // Fecha o popup de sucesso final
-    if (btnFecharSucesso && popupSucesso) {
-        btnFecharSucesso.addEventListener('click', () => {
-            popupSucesso.style.display = 'none';
-        });
-    }
+btncadastrar.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'flex';
 });
+
+btnCancelar.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'none';
+    return
+});
+
+btnConfirmarFinal.onclick = (e) => {
+    e.preventDefault(); // Bloqueia o refresh da página (essencial)
+    
+    popupConfirmacao.style.display = 'none';
+    popupSucesso.style.display = 'flex';
+};
+
+// 4. Fechar o popup de sucesso final
+btnFecharSucesso.addEventListener('click', () => {
+    popupSucesso.style.display = 'none';
+});
+
+//Função para mostrar o Toast
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+}

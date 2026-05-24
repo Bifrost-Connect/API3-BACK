@@ -24,9 +24,22 @@ public class VehicleService {
         this.carTypeRepository = carTypeRepository;
     }
 
+<<<<<<< Updated upstream
     // =========================================================
     // ATUALIZAR KM / OBS
     // =========================================================
+=======
+    @Transactional(readOnly = true)
+    public Float findLastFinalKmByPrefix(String prefix) {
+        Car car = carRepository.findById(prefix)
+                .orElseThrow(() -> new RuntimeException("Veículo não encontrado com o prefixo: " + prefix));
+
+        Float lastKm = serviceRepository.findLastFinalKmByCarPrefix(car.getPrefix());
+
+        return (lastKm != null) ? lastKm : car.getCurrentKm();
+    }
+
+>>>>>>> Stashed changes
     @Transactional
     public void updateKmAndObs(String prefix, Float km, String obs) {
         Car car = carRepository.findById(prefix)

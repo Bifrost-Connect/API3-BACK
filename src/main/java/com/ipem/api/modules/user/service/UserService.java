@@ -44,22 +44,37 @@ public class UserService {
         return repository.findByPermissionAndIsActiveTrue(permission);
     }
 
+    // SOMENTE TÉCNICOS COM STATUS ACTIVE
+    public List<User> findActiveTechnicians() {
+        return repository.findByPermissionAndEmployeeStatusAndIsActiveTrue(
+                Permission.TECHNICIAN,
+                EmployeeStatus.AVAILABLE
+        );
+    }
+
     @Transactional
     public void deleteUser(String registration) {
-        User user = repository.findById(registration)
+        User user = repository.findByRegistrationAndIsActiveTrue(registration)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         user.setIsActive(false);
         repository.save(user);
     }
 
+    public User findByRegistration(String registration) {
+        return repository.findByRegistrationAndIsActiveTrue(registration)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     public User updateUserFields(String registration, Map<String, Object> updates) {
-        // Busca o usuário pela matrícula (registration)
-        // O SQLRestriction "is_active = true" já filtrará usuários inativos automaticamente
-        User user = repository.findById(registration)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com a matrícula: " + registration));
+
+        User user = repository.findByRegistrationAndIsActiveTrue(registration)
+                .orElseThrow(() -> new RuntimeException(
+                        "Usuário não encontrado com a matrícula: " + registration
+                ));
 
         updates.forEach((key, value) -> {
-            if (value == null) return; // Ignora valores nulos enviados no mapa
+            if (value == null) return;
 
             switch (key) {
                 case "name":
@@ -95,6 +110,11 @@ public class UserService {
                 case "isActive":
                     user.setIsActive((Boolean) value);
                     break;
+
+                case "photo":
+                    user.setPhoto((String) value);
+                    break;
+
                 default:
                     break;
             }

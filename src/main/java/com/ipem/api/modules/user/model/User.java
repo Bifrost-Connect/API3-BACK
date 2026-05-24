@@ -75,7 +75,7 @@ public class User extends BaseEntity implements UserDetails {
     public String getPassword() { return password; }
 
     @Override
-    public String getUsername() {return this.registration;}
+    public String getUsername() { return this.registration; }
 
     @Override
     public boolean isAccountNonExpired() { return true; }
@@ -94,4 +94,17 @@ public class User extends BaseEntity implements UserDetails {
 
     private String driverLicenseCategory;
     private LocalDate driverLicenseExpiration;
+
+    // foto do perfil
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String photo;
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
+    }
 }
