@@ -1,212 +1,227 @@
 /**
- * js/tecnicos.js
- * Responsável por: Listagem, filtro e edição de Técnicos (Tela do Gestor).
+ * ===================================================================
+ * ARQUIVO: relatorios.js
+ * REFERÊNCIA GLOBAL: Requer 'basic.js' (Utiliza apiFetch, baixarArquivo, mostrarToast)
+ * RESPONSABILIDADE: Carregar os relatórios mensais do dashboard do gestor,
+ * manipular a exibição de meses, KPIs, tabela de chamados e gerenciar
+ * a exportação de arquivos CSV.
+ * ===================================================================
  */
 
 // ===================================================================
-// 1. ESTADO GLOBAL E DICIONÁRIOS
+// 1. ESTADO GLOBAL
 // ===================================================================
-let tecnicosAtuais = [];
-let tecnicoEditandoMatricula = null;
-
-const TRANSLATION = {
-    STATUS: {
-        "AVAILABLE": "Ativo",
-        "ON_DUTY": "Em Serviço",
-        "DISMISSED": "Inativo"
-    },
-    PERFIL: {
-        "TECHNICIAN": "Técnico",
-        "ADMINISTRATOR": "Gestor"
-    }
-};
-
-// Converte a label da interface de volta para o ENUM do backend
-function getBackendStatus(statusUI) {
-    const mapaInverso = {
-        "Ativo": "AVAILABLE",
-        "Em Serviço": "ON_DUTY",
-        "Inativo": "DISMISSED",
-        "Suspenso": "DISMISSED"
-    };
-    return mapaInverso[statusUI] || "AVAILABLE";
-}
+let relatoriosDoBanco = [];
+let selectedReportIndex = 0;
 
 // ===================================================================
-// 2. BUSCA E RENDERIZAÇÃO
+// 2. BUSCA E RENDERIZAÇÃO DA API
 // ===================================================================
-async function buscarTecnicosDaAPI() {
-    const corpoTabela = document.getElementById("tecnicosTabelaCorpo");
-    if (corpoTabela) {
-        corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">Carregando técnicos...</td></tr>`;
+
+/**
+ * Função: carregarRelatoriosDaAPI
+ * O que faz: Busca os relatórios dos últimos meses na API. Corrige o mapeamento
+ * lendo a propriedade "reports" retornada pelo Map.of() no Spring Boot.
+ * Requisição: GET /dashboard/reports
+ */
+async function carregarRelatoriosDaAPI() {
+    const tbody = document.querySelector(".relatorios-table tbody");
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">Carregando relatórios...</td></tr>`;
     }
 
     try {
-        const response = await apiFetch("/user/technicians", { method: "GET" });
-        if (!response) return; // basic.js trata redirecionamento se token for inválido
+        // Usa o wrapper global do basic.js batendo na rota correta do Controller
+        const response = await window.apiFetch("/dashboard/reports", { method: "GET" });
+        if (!response) return; // basic.js intercepta se token estiver inválido
 
         if (response.ok) {
             const data = await response.json();
-            tecnicosAtuais = data.map(u => ({
-                registration: u.registration,
-                name: u.name,
-                email: u.email,
-                phone: u.phone || "Não informado",
-                setor: u.setor || "Operacional", // Assumindo setor default se não existir no back
-                perfil: u.permission || "TECHNICIAN",
-                status: u.employeeStatus || "AVAILABLE"
-            }));
-
-            renderizarTecnicos(tecnicosAtuais);
+            // O backend (DashboardController) retorna { "reports": [...] }
+            relatoriosDoBanco = data.reports || [];
+            inicializarRelatorios();
         } else {
-            const errorMsg = await response.text();
-            if (corpoTabela) corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Erro ao carregar técnicos.</td></tr>`;
-            console.error("Erro na busca de técnicos:", errorMsg);
+            console.error("Erro ao buscar relatórios. Status:", response.status);
+            mostrarErroNaTabela("Falha ao carregar os dados do servidor.");
         }
     } catch (error) {
-        console.error("Erro de conexão ao carregar técnicos:", error);
-        window.mostrarToast("Falha de comunicação com o servidor.");
-        if (corpoTabela) corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Sem conexão com o servidor.</td></tr>`;
+        console.error("Erro de conexão com a API:", error);
+        mostrarErroNaTabela("Erro de conexão. Verifique se o back-end está rodando.");
     }
 }
 
-function renderizarTecnicos(lista) {
-    const corpo = document.getElementById("tecnicosTabelaCorpo");
-    if (!corpo) return;
+/**
+ * Função: inicializarRelatorios
+ * O que faz: Valida se há dados para exibir. Se houver, aciona a criação
+ * dos botões dos meses e seleciona o mais recente por padrão (índice 0).
+ */
+function inicializarRelatorios() {
+    const containerMeses = document.getElementById("months-list");
+    if (!containerMeses) return;
 
-    if (!lista || lista.length === 0) {
-        corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 32px 0; color: #4a5c7f;">Nenhum técnico encontrado.</td></tr>`;
+    if (!relatoriosDoBanco || relatoriosDoBanco.length === 0) {
+        mostrarErroNaTabela("Nenhum relatório encontrado no banco de dados.");
         return;
     }
 
-    corpo.innerHTML = lista.map(tecnico => {
-        const statusPT = TRANSLATION.STATUS[tecnico.status] || "Ativo";
-        const perfilPT = TRANSLATION.PERFIL[tecnico.perfil] || "Técnico";
+    renderizarMeses();
+    window.selecionarRelatorio(0); // Força a exibição do primeiro mês da lista
+}
 
-        return `
-            <tr>
-                <td>${tecnico.name}</td>
-                <td>${tecnico.registration}</td>
-                <td>${tecnico.email}</td>
-                <td>${tecnico.setor}</td>
-                <td>${perfilPT}</td>
-                <td><span class="status-badge status-${tecnico.status}">${statusPT}</span></td>
-                <td>
-                    <button class="btn-tecnico-editar" type="button" onclick="abrirEditarTecnico('${tecnico.registration}')">
-                        Editar
-                    </button>
-                </td>
-            </tr>
+/**
+ * Função: renderizarMeses
+ * O que faz: Cria dinamicamente os botões de navegação lateral com o Mês/Ano,
+ * aplicando a classe 'active' ao botão do relatório atualmente selecionado.
+ */
+function renderizarMeses() {
+    const container = document.getElementById("months-list");
+    if (!container) return;
+
+    container.innerHTML = ""; // Limpa os botões antes de recriar
+
+    relatoriosDoBanco.forEach((month, index) => {
+        const button = document.createElement("button");
+        button.textContent = `${month.monthLabel} ${month.year}`;
+        button.className = index === selectedReportIndex ? "periodo active" : "periodo";
+        // Vincula o clique à função de seleção no escopo global
+        button.onclick = () => window.selecionarRelatorio(index);
+        container.appendChild(button);
+    });
+}
+
+// ===================================================================
+// 3. ATUALIZAÇÃO DA INTERFACE (UI) E SELEÇÃO
+// ===================================================================
+
+/**
+ * Função: selecionarRelatorio (Global)
+ * O que faz: Atualiza o estado da aplicação apontando para o mês escolhido.
+ * Recarrega os componentes visuais (Status, Resumos, Tabela e Botões).
+ */
+window.selecionarRelatorio = function (index) {
+    selectedReportIndex = index;
+    renderizarMeses(); // Atualiza a marcação visual do botão 'active'
+
+    const report = relatoriosDoBanco[selectedReportIndex];
+    if (!report) return;
+
+    mostrarStatus(report.status);
+    atualizarResumo(report.totalCalls, report.completedCalls, report.openCalls);
+    atualizarTabela(report.entries);
+
+    // Altera a label do botão de exportação se o mês ainda não fechou
+    const btnExport = document.querySelector(".btn-gerar");
+    if (btnExport) {
+        btnExport.textContent = report.isCurrentMonth ? "Gerar relatório parcial" : "Exportar CSV";
+    }
+};
+
+/**
+ * Funções de Atualização Fragmentada do DOM
+ * O que fazem: Injetam os dados contidos no relatório selecionado dentro
+ * de seções específicas da tela (KPIs e Tabela de Registros).
+ */
+function mostrarStatus(text) {
+    const statusElement = document.querySelector(".relatorios-kpis article:nth-child(1) strong");
+    if (statusElement) statusElement.textContent = text || "-";
+}
+
+function atualizarResumo(total, completed, open) {
+    const kpis = document.querySelectorAll(".relatorios-kpis article strong");
+    if (kpis.length >= 4) {
+        kpis[1].textContent = total ?? "0";
+        kpis[2].textContent = completed ?? "0";
+        kpis[3].textContent = open ?? "0";
+    }
+}
+
+function atualizarTabela(entries) {
+    const tbody = document.querySelector(".relatorios-table tbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = ""; // Limpa a tabela
+
+    if (!entries || entries.length === 0) {
+        mostrarErroNaTabela("Nenhum chamado registrado neste mês.");
+        return;
+    }
+
+    entries.forEach(entry => {
+        const row = document.createElement("tr");
+        let statusClass = "status-indicar"; // Laranja/Aberto por padrão
+
+        if (entry.status === "Finalizado") statusClass = "status-finalizado"; // Verde
+        else if (entry.status === "Em andamento") statusClass = "status-andamento"; // Azul
+
+        row.innerHTML = `
+            <td>${entry.id}</td>
+            <td>${entry.carPrefix || "-"}</td>
+            <td>${entry.userName || entry.userRegistration || "-"}</td>
+            <td>${entry.description || "-"}</td>
+            <td>${entry.departureTime || "-"}</td>
+            <td>${entry.completionTime || "-"}</td>
+            <td><span class="status-chip ${statusClass}">${entry.status || "-"}</span></td>
         `;
-    }).join("");
+        tbody.appendChild(row);
+    });
+}
+
+function mostrarErroNaTabela(mensagem) {
+    const tbody = document.querySelector(".relatorios-table tbody");
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#67717b; padding:28px 0;">${mensagem}</td></tr>`;
+    }
 }
 
 // ===================================================================
-// 3. EDIÇÃO DE TÉCNICOS (UI e Integração)
+// 4. EXPORTAÇÃO DE ARQUIVOS
 // ===================================================================
-window.abrirEditarTecnico = function (matricula) {
-    tecnicoEditandoMatricula = matricula;
-    const tecnico = tecnicosAtuais.find(t => t.registration === matricula);
 
-    if (!tecnico) return;
-
-    // Função de segurança para não quebrar caso o HTML não tenha o ID
-    const preencherCampo = (id, valor) => {
-        const el = document.getElementById(id);
-        if (el) el.value = valor;
-    };
-
-    preencherCampo("editarNome", tecnico.name);
-    preencherCampo("editarEmail", tecnico.email);
-    preencherCampo("editarMatricula", tecnico.registration);
-    preencherCampo("editarTelefone", tecnico.phone !== "Não informado" ? tecnico.phone : "");
-    preencherCampo("editarSetor", tecnico.setor);
-
-    // Ajusta o Select do Status
-    const statusAtualUI = TRANSLATION.STATUS[tecnico.status] || "Ativo";
-    preencherCampo("editarStatus", statusAtualUI);
-
-    const popup = document.getElementById("popupEditarTecnico");
-    if (popup) popup.style.display = "flex";
-};
-
-window.fecharPopupEditarTecnico = function () {
-    const popup = document.getElementById("popupEditarTecnico");
-    if (popup) popup.style.display = "none";
-    tecnicoEditandoMatricula = null; // Limpa o estado
-};
-
-window.salvarAlteracoesTecnico = async function () {
-    const nome = document.getElementById("editarNome")?.value.trim();
-    const email = document.getElementById("editarEmail")?.value.trim();
-    const statusSelecionadoUI = document.getElementById("editarStatus")?.value;
-
-    if (!nome || !email) {
-        window.mostrarToast("Nome e E-mail são campos obrigatórios.");
+/**
+ * Função: gerardownload (Global)
+ * O que faz: Extrai os parâmetros do mês selecionado e aciona a função
+ * global baixarArquivo() (do basic.js) para se comunicar com o backend
+ * e iniciar o download do arquivo.
+ */
+window.gerardownload = async function () {
+    if (!relatoriosDoBanco || relatoriosDoBanco.length === 0) {
+        window.mostrarToast("Nenhum dado para exportar.", "toast-aviso");
         return;
     }
 
-    const payload = {
-        name: nome,
-        email: email,
-        phone: document.getElementById("editarTelefone")?.value.trim() || null,
-        employeeStatus: getBackendStatus(statusSelecionadoUI)
+    const report = relatoriosDoBanco[selectedReportIndex];
+
+    // Parâmetros de consulta (Query Params) para repassar à API de exportação
+    const parametros = {
+        mes: report.monthLabel,
+        ano: report.year
     };
+
+    const nomeArquivo = `relatorio_chamados_${report.monthLabel}_${report.year}`;
 
     try {
-        const response = await apiFetch(`/user/update/${tecnicoEditandoMatricula}`, {
-            method: "PATCH",
-            body: JSON.stringify(payload)
-        });
-
-        if (response && response.ok) {
-            window.mostrarToast("Técnico atualizado com sucesso!", "toast-aviso1");
-            window.fecharPopupEditarTecnico();
-            buscarTecnicosDaAPI(); // Recarrega a tabela com os novos dados
-        } else if (response) {
-            // Tenta pegar o JSON ou o texto do erro
-            const errorData = await response.json().catch(() => ({}));
-            const mensagem = errorData.error || errorData.message || "Verifique os dados informados.";
-            window.mostrarToast("Erro ao salvar: " + mensagem);
-        }
+        window.mostrarToast("Iniciando exportação...", "toast-aviso1");
+        // Delegado para a função padronizada de exportação (ExportController)
+        await window.baixarArquivo("csv", "reports", parametros, nomeArquivo);
     } catch (error) {
-        console.error("Erro na requisição de atualização:", error);
-        window.mostrarToast("Erro de conexão com o servidor.");
+        console.error("Erro durante a exportação:", error);
+        window.mostrarToast("Erro ao exportar arquivo.", "toast-aviso");
     }
 };
 
-// ===================================================================
-// 4. SISTEMA DE FILTROS LOCAIS
-// ===================================================================
-window.aplicarFiltroTecnicos = function () {
-    const termo = document.getElementById("filtroBuscaTecnico")?.value.trim().toLowerCase() || "";
-
-    if (!termo) {
-        renderizarTecnicos(tecnicosAtuais);
-        return;
-    }
-
-    const filtrados = tecnicosAtuais.filter(t => {
-        return [t.name, t.registration, t.email, t.setor].some(campo =>
-            (campo || "").toLowerCase().includes(termo)
-        );
-    });
-
-    renderizarTecnicos(filtrados);
-};
-
-window.limparFiltroTecnicos = function () {
-    const campo = document.getElementById("filtroBuscaTecnico");
-    if (campo) campo.value = "";
-    renderizarTecnicos(tecnicosAtuais);
-};
+// Cria um alias para garantir compatibilidade caso algum botão use o nome antigo
+window.exportCsvForSelectedMonth = window.gerardownload;
 
 // ===================================================================
 // 5. INICIALIZAÇÃO
 // ===================================================================
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Só faz a requisição se a tabela de técnicos existir na página atual
-    if (document.getElementById("tecnicosTabelaCorpo")) {
-        buscarTecnicosDaAPI();
+    // Compatibilidade com possíveis scripts de layout global
+    if (typeof carregarDadosTelaInicial === "function") carregarDadosTelaInicial();
+
+    // Valida se a página atual é a de relatórios antes de disparar o fetch
+    if (document.getElementById("months-list") || document.querySelector(".relatorios-table")) {
+        carregarRelatoriosDaAPI();
     }
 });

@@ -1,0 +1,78 @@
+package com.ipem.api.modules.export.controller;
+
+import com.ipem.api.modules.export.service.ExportService;
+import com.ipem.api.modules.user.service.UserService;
+import com.ipem.api.modules.vehicle.service.VehicleService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/export")
+public class ExportController {
+
+    private final ExportService exportService;
+    private final UserService userService;
+    private final VehicleService vehicleService;
+
+    public ExportController(ExportService exportService, UserService userService, VehicleService vehicleService) {
+        this.exportService = exportService;
+        this.userService = userService;
+        this.vehicleService = vehicleService;
+    }
+
+    /**
+     * Método auxiliar para construir a resposta HTTP de download de forma padronizada.
+     */
+    private ResponseEntity<byte[]> buildResponse(byte[] fileBytes, String format, String fileName) {
+        HttpHeaders headers = new HttpHeaders();
+
+        // Tratamento para garantir que o arquivo tenha a extensão correta caso o usuário não envie na URL
+        String finalFileName = fileName.toLowerCase().endsWith("." + format.toLowerCase())
+                ? fileName
+                : fileName + "." + format;
+
+        // Configura o Content-Disposition com o nome dinâmico vindo da URL
+        headers.setContentDispositionFormData("attachment", finalFileName);
+
+        // Define o tipo MIME correto baseado no formato solicitado
+        MediaType mediaType = switch (format.toLowerCase()) {
+            case "csv" -> MediaType.valueOf("text/csv");
+            case "excel", "xlsx" -> MediaType.valueOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            case "pdf" -> MediaType.APPLICATION_PDF;
+            default -> MediaType.APPLICATION_OCTET_STREAM;
+        };
+
+        headers.setContentType(mediaType);
+
+        return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+    }
+
+    // /export/csv/users/dows
+
+    /**
+     * Endpoint para exportar todos os usuários.
+     */
+    @GetMapping("/{format}/users/{fileName}")
+    public ResponseEntity<byte[]> downloadUsers(@PathVariable String format, @PathVariable String fileName) {
+        List<?> data = userService.findAllUsers();
+
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
+
+    /**
+     * Endpoint para exportar todos os veículos.
+     */
+    @GetMapping("/{format}/vehicle/{fileName}")
+    public ResponseEntity<byte[]> downloadVehicles(@PathVariable String format, @PathVariable String fileName) {
+        List<?> data = vehicleService.findAllCars();
+
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
+}

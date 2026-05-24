@@ -11,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +48,8 @@ public class UserController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Matrícula ou senha incorretos.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Matrícula ou senha incorretos.");
         }
     }
 
@@ -56,12 +59,14 @@ public class UserController {
             User newUser = service.registerUser(data);
             return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PatchMapping("/update/{registration}")
-    public ResponseEntity<?> update(@PathVariable String registration, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> update(@PathVariable String registration,
+                                    @RequestBody Map<String, Object> updates) {
         try {
             User updatedUser = service.updateUserFields(registration, updates);
             return ResponseEntity.ok(updatedUser);
@@ -75,5 +80,57 @@ public class UserController {
     public ResponseEntity<List<User>> listTechnicians() {
         var technicians = service.findAllByPermission(Permission.TECHNICIAN);
         return ResponseEntity.ok(technicians);
+    }
+
+    // SOMENTE TÉCNICOS ATIVOS
+    @GetMapping("/technicians/active")
+    public ResponseEntity<List<User>> listActiveTechnicians() {
+        var technicians = service.findActiveTechnicians();
+        return ResponseEntity.ok(technicians);
+    }
+
+    // Upload de foto
+    @PostMapping("/upload-photo/{registration}")
+    public ResponseEntity<?> uploadPhoto(
+            @PathVariable String registration,
+            @RequestParam("foto") MultipartFile foto
+    ) {
+        try {
+
+            String base64Photo = Base64.getEncoder()
+                    .encodeToString(foto.getBytes());
+
+            service.updateUserFields(
+                    registration,
+                    Map.of("photo", base64Photo)
+            );
+
+            return ResponseEntity.ok("Foto atualizada com sucesso");
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Buscar foto
+    @GetMapping("/photo/{registration}")
+    public ResponseEntity<?> getPhoto(@PathVariable String registration) {
+        try {
+
+            User user = service.findByRegistration(registration);
+
+            if (user == null || user.getPhoto() == null) {
+                return ResponseEntity.ok("");
+            }
+
+            return ResponseEntity.ok(user.getPhoto());
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }
