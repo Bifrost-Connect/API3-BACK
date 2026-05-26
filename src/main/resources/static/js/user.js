@@ -1,138 +1,255 @@
-/**
- * ===================================================================
- * ARQUIVO: user.js (ou cadusuarios.js)
- * REFERÊNCIA GLOBAL: Requer 'basic.js' (Utiliza apiFetch e mostrarToast)
- * RESPONSABILIDADE: Gerenciar o fluxo de interface e a integração
- * com a API para o cadastro de novos usuários (Técnicos).
- * ===================================================================
- */
-
-// ===================================================================
-// 1. INTEGRAÇÃO COM A API: CADASTRAR USUÁRIO
-// ===================================================================
-
-/**
- * Função: cadastrarUsuario
- * O que faz: Lê os campos do formulário, valida se estão preenchidos,
- * monta o payload (DTO) e envia para o backend. Em caso de sucesso,
- * avança para a tela de sucesso final e limpa o formulário.
- * Requisição: POST /user/register
- */
-window.cadastrarUsuario = async function () {
+// CADASTRAR USUÁRIO
+window.cadastrarUsuario = async function() {
     const nameInput = document.getElementById("cadNome")?.value;
     const emailInput = document.getElementById("cadEmail")?.value;
     const registrationInput = document.getElementById("cadMatricula")?.value;
     const passwordInput = document.getElementById("cadSenha")?.value;
 
     if (!nameInput || !emailInput || !registrationInput || !passwordInput) {
-        window.mostrarToast("Preencha todos os campos obrigatórios!");
+        mostrarToast("Preencha todos os campos!");
         return;
     }
 
-    // Monta o objeto correspondente ao RegisterDTO do backend
+    // Payload compatível com RegisterDTO / backend Spring Boot
     const payload = {
-        registration: registrationInput.trim(),
-        name: nameInput.trim(),
-        email: emailInput.trim(),
+        registration: registrationInput,
+        name: nameInput,
+        email: emailInput,
         password: passwordInput,
-        permission: "TECHNICIAN" // Enviado em uppercase para bater com o Enum do Java
+        permission: "technician"
     };
 
     try {
-        // Dispara a requisição utilizando o wrapper global que injeta o Token
-        const response = await window.apiFetch("/user/register", {
+        const response = await fetch("http://localhost:8080/user/register", {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        if (response && response.ok) {
-            // Sucesso: Esconde a confirmação e exibe o modal de sucesso final
-            const popupConf = document.getElementById('popupConfirmacao');
-            const popupSuc = document.getElementById('popupSucesso');
-
-            if (popupConf) popupConf.style.display = 'none';
-
-            if (popupSuc) {
-                popupSuc.style.display = 'flex';
-            } else {
-                // Fallback caso a nova interface não tenha o popup na tela
-                window.mostrarToast("Usuário cadastrado com sucesso!", "toast-aviso1");
+        if (response.ok) {
+            if (typeof abrirModalConfirmacao === "function") {
+                abrirModalConfirmacao();
             }
 
-            limparFormularioUsuario();
+            // Limpa os campos após sucesso
+            ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.value = "";
+            });
 
-        } else if (response) {
-            // Falha tratada: Extrai a mensagem de erro formatada do Spring Boot
-            const erro = await response.json().catch(() => ({}));
-            const mensagemErro = erro.error || erro.message || "Verifique os dados informados.";
-            window.mostrarToast("Erro ao cadastrar: " + mensagemErro);
+        } else {
+            const errorMsg = await response.text();
+            mostrarToast("Erro ao cadastrar: " + errorMsg);
         }
+
     } catch (error) {
-        console.error("Erro na requisição de cadastro:", error);
-        window.mostrarToast("Falha de conexão com o servidor.");
+        console.error("Connection error:", error);
+        mostrarToast("Erro de conexão com o servidor.");
     }
 };
 
+// salvar info
 
-// ===================================================================
-// 2. FUNÇÕES AUXILIARES DE UI
-// ===================================================================
+const popupConfirmacao = document.getElementById('popupConfirmacao');
+const popupSucesso = document.getElementById('popupSucesso');
+const btncadastrar = document.getElementById('btncadastrar');
+const btnCancelar = document.getElementById('btn-cancelar-confirmacao');
+const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
+const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
 
-/**
- * Função: limparFormularioUsuario
- * O que faz: Zera todos os inputs do cadastro após uma operação bem-sucedida.
- */
-function limparFormularioUsuario() {
-    ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) field.value = "";
-    });
-}
-
-
-// ===================================================================
-// 3. INICIALIZAÇÃO DE EVENTOS DOM (Modais e Botões)
-// ===================================================================
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Mapeamento dos elementos da interface
-    const popupConfirmacao = document.getElementById('popupConfirmacao');
-    const popupSucesso = document.getElementById('popupSucesso');
-
-    const btnCadastrar = document.getElementById('btncadastrar');
-    const btnCancelarConf = document.getElementById('btn-cancelar-confirmacao');
-    const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
-    const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
-
-    // PASSO 1: O usuário preenche e clica no primeiro botão "Cadastrar"
-    // Ação: Abre a tela de confirmação (sem enviar para a API ainda)
-    if (btnCadastrar && popupConfirmacao) {
-        btnCadastrar.addEventListener('click', () => {
-            popupConfirmacao.style.display = 'flex';
-        });
-    }
-
-    // Ação secundária: O usuário desiste na tela de confirmação
-    if (btnCancelarConf && popupConfirmacao) {
-        btnCancelarConf.addEventListener('click', () => {
-            popupConfirmacao.style.display = 'none';
-        });
-    }
-
-    // PASSO 2: O usuário confirma os dados no modal final
-    // Ação: Dispara a requisição de cadastro real para o backend (service.js)
-    if (btnConfirmarFinal) {
-        btnConfirmarFinal.addEventListener('click', (e) => {
-            e.preventDefault(); // Impede comportamento padrão de submit do form
-            window.cadastrarUsuario();
-        });
-    }
-
-    // PASSO 3: O usuário clica em "OK" na tela de sucesso final
-    // Ação: Fecha o modal verde de sucesso
-    if (btnFecharSucesso && popupSucesso) {
-        btnFecharSucesso.addEventListener('click', () => {
-            popupSucesso.style.display = 'none';
-        });
-    }
+btncadastrar.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'flex';
 });
+
+btnCancelar.addEventListener('click', () => {
+    popupConfirmacao.style.display = 'none';
+    return
+});
+
+btnConfirmarFinal.onclick = (e) => {
+    e.preventDefault(); // Bloqueia o refresh da página (essencial)
+    
+    popupConfirmacao.style.display = 'none';
+    popupSucesso.style.display = 'flex';
+};
+
+// 4. Fechar o popup de sucesso final
+btnFecharSucesso.addEventListener('click', () => {
+    popupSucesso.style.display = 'none';
+});
+
+
+function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast-aviso");
+    if (toast) {
+        toast.innerText = mensagem;
+        toast.style.display = "block";
+        toast.classList.remove("toast-hidden");
+
+        // Esconde após 3 segundos
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 3000);
+    }
+
+    window.carregarDadosUsuario = async function() {
+        // 1. Resgata as credenciais salvas no login
+        const registration = localStorage.getItem("userRegistration");
+        const token = localStorage.getItem("userToken");
+
+        if (!registration) {
+            console.warn("Matrícula não encontrada no localStorage. O usuário precisa fazer login.");
+            return; 
+        }
+
+        try {
+
+            const response = await fetch(`http://localhost:8080/user/${registration}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // Passando o token por segurança
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+
+
+                const inputEmail = document.getElementById("perfilEmail");
+                const inputTelefone = document.getElementById("perfilTelefone");
+                const selectCNH = document.getElementById("perfilCNH");
+                const textNome = document.getElementById("perfilNome");
+                const previewFoto = document.getElementById("previewFoto");
+                const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+
+
+                if (inputEmail) inputEmail.value = user.email || "";
+                if (inputTelefone) inputTelefone.value = user.phone || "";
+                if (selectCNH) selectCNH.value = user.driverLicenseCategory || "";
+
+
+                if (textNome) textNome.innerText = user.name || "Usuário";
+
+                if (user.photo && previewFoto) {
+
+                    previewFoto.src = user.photo.startsWith("data:image") ? user.photo : `data:image/jpeg;base64,${user.photo}`;
+                    previewFoto.style.display = "block";
+                    if (avatarPlaceholder) avatarPlaceholder.style.display = "none";
+                }
+
+            } else {
+                console.error("Erro ao buscar perfil:", await response.text());
+                mostrarToast("Erro ao carregar dados do perfil.");
+            }
+        } catch (error) {
+            console.error("Erro de conexão ao buscar perfil:", error);
+        }
+    };
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (document.body.classList.contains("pagina-configuracoes")) {
+            carregarDadosUsuario();
+        }
+    });
+
+    window.atualizarPreviewFoto = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById("previewFoto");
+                const placeholder = document.getElementById("avatarPlaceholder");
+
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                }
+                if (placeholder) {
+                    placeholder.style.display = "none";
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    };
+
+
+    window.salvarConfiguracoesPerfil = async function() {
+        const registration = localStorage.getItem("userRegistration");
+        const token = localStorage.getItem("userToken");
+
+        if (!registration) {
+            mostrarToast("Sessão expirada. Faça login novamente.");
+            return;
+        }
+
+
+        const emailInput = document.getElementById("perfilEmail")?.value;
+        const senhaInput = document.getElementById("perfilSenha")?.value;
+        const telefoneInput = document.getElementById("perfilTelefone")?.value;
+        const cnhInput = document.getElementById("perfilCNH")?.value;
+
+
+        const payloadTexto = {};
+        if (emailInput) payloadTexto.email = emailInput;
+        if (senhaInput) payloadTexto.password = senhaInput; // A API deve lidar com o hash da senha se necessário
+        if (telefoneInput) payloadTexto.phone = telefoneInput;
+        if (cnhInput) payloadTexto.driverLicenseCategory = cnhInput;
+
+        try {
+
+            if (Object.keys(payloadTexto).length > 0) {
+                const resTexto = await fetch(`http://localhost:8080/user/update/${registration}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payloadTexto)
+                });
+
+                if (!resTexto.ok) {
+                    mostrarToast("Erro ao atualizar os dados do perfil.");
+                    return;
+                }
+            }
+
+
+            const fotoInput = document.getElementById("perfilFoto");
+            if (fotoInput && fotoInput.files.length > 0) {
+                const fotoFile = fotoInput.files[0];
+                const formData = new FormData();
+                formData.append("foto", fotoFile); // O nome "foto" deve bater com o @RequestParam("foto") no Spring
+
+                const resFoto = await fetch(`http://localhost:8080/user/upload-photo/${registration}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+
+                    },
+                    body: formData
+                });
+
+                if (!resFoto.ok) {
+                    mostrarToast("Dados salvos, mas erro ao enviar a imagem.");
+                    return;
+                }
+            }
+
+
+            mostrarToast("Configurações salvas com sucesso!");
+
+            const inputSenha = document.getElementById("perfilSenha");
+            if (inputSenha) inputSenha.value = "";
+
+            setTimeout(() => carregarDadosUsuario(), 1500);
+
+        } catch (error) {
+            console.error("Erro ao salvar configurações:", error);
+            mostrarToast("Erro de conexão com o servidor.");
+        }
+    };
+
+}
