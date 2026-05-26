@@ -43,6 +43,7 @@ public class UserController {
 
             return ResponseEntity.ok(Map.of(
                     "token", tokenJWT,
+                    "registration", user.getRegistration(),
                     "permission", user.getPermission().name(),
                     "name", user.getName()
             ));
@@ -61,6 +62,17 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{registration}")
+    public ResponseEntity<?> getUserByRegistration(@PathVariable String registration) {
+        try {
+            User user = service.findByRegistration(registration);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Usuário não encontrado: " + e.getMessage()));
         }
     }
 

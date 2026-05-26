@@ -24,6 +24,8 @@ window.btnindex = async function() {
 
             localStorage.setItem("userName", user.name);
             localStorage.setItem("userPermission", permission);
+            localStorage.setItem("userRegistration", user.registration);
+            localStorage.setItem("userToken", user.token);
 
             if (permission === "ADMINISTRATOR") {
                 window.location.href = "telainicial-gestor.html";
