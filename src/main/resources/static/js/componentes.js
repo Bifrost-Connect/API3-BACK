@@ -44,7 +44,7 @@ window.renderizarSidebarTecnico = function () {
             <div class="sidebar-nav">
                 <a href="telainicial.html">TELA INICIAL</a>
                 <a href="chamados.html">CHAMADOS</a>
-                <a href="configuracoes-tecnico.html">CONFIGURAÇÕES</a>
+                <a href="configuracoes.html">CONFIGURAÇÕES</a>
             </div>
         </div>
     `;
@@ -64,6 +64,8 @@ window.renderizarSidebarGestor = function () {
             
             <div class="sidebar-nav">
                 <a href="telainicial-gestor.html">TELA INICIAL</a>
+                <a href="telainicial.html">SELECIONAR VEICULO</a>
+                <a href="chamados.html">CHAMADOS</a>
                 <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
                 <a href="tela-mapa-gestor.html">GERENCIAR CHAMADOS</a>
                 <a href="relatorios.html">RELATÓRIOS</a>
@@ -80,7 +82,7 @@ window.renderizarSidebarGestor = function () {
                     </div>
                 </div>
                 
-                <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+                <a href="configuracoes.html">CONFIGURAÇÕES</a>
             </div>
         </div>
     `;
@@ -116,13 +118,11 @@ function marcarLinkAtivo(sidebar) {
 
         link.classList.toggle("active", ativo);
 
-        // Verifica se a página atual pertence ao submenu de cadastros
         if (ativo && (href === "cadastroveiculos.html" || href === "cadastrousuarios.html")) {
             isPaginaCadastro = true;
         }
     });
 
-    // Trata a expansão automática e cor do menu pai "CADASTRO"
     const btnCadastro = sidebar.querySelector("#btn-cadastro");
     const submenuCadastro = sidebar.querySelector("#submenu-cadastro");
     if (btnCadastro && submenuCadastro) {
@@ -134,10 +134,6 @@ function marcarLinkAtivo(sidebar) {
 // 3. INICIALIZAÇÃO DE EVENTOS DO LAYOUT
 // ===================================================================
 
-/**
- * Função global chamada logo após os elementos serem injetados no DOM.
- * Vincula os cliques dos botões de menu e o sistema de links ativos.
- */
 window.inicializarComponentes = function () {
     const topbarContainer = document.getElementById("topbar-container");
     const sidebarContainer = document.getElementById("sidebar-container");
@@ -151,13 +147,11 @@ window.inicializarComponentes = function () {
     const btnCadastro = sidebar ? sidebar.querySelector("#btn-cadastro") : null;
     const submenuCadastro = sidebar ? sidebar.querySelector("#submenu-cadastro") : null;
 
-    // Proteção contra dupla inicialização caso a função seja chamada mais de uma vez
     if (!sidebar || sidebar.dataset.initialized === "true") {
         if (sidebar) marcarLinkAtivo(sidebar);
         return;
     }
 
-    // Ações de Abrir/Fechar Sidebar
     const abrirSidebar = () => {
         sidebar.classList.add("open");
         if (overlay) overlay.classList.add("active");
@@ -168,17 +162,14 @@ window.inicializarComponentes = function () {
         if (overlay) overlay.classList.remove("active");
     };
 
-    // Vinculação de Listeners de interface
     if (btnMenu) btnMenu.addEventListener("click", abrirSidebar);
     if (btnX) btnX.addEventListener("click", fecharSidebar);
     if (overlay) overlay.addEventListener("click", fecharSidebar);
 
-    // Fechamento da sidebar com a tecla ESC para acessibilidade
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") fecharSidebar();
     });
 
-    // Alternador de expansão do submenu "CADASTRO"
     if (btnCadastro && submenuCadastro) {
         btnCadastro.addEventListener("click", () => {
             const expandido = !submenuCadastro.classList.contains("active");
@@ -186,10 +177,8 @@ window.inicializarComponentes = function () {
         });
     }
 
-    // Sinaliza que o componente já foi montado para evitar binds repetidos
     sidebar.dataset.initialized = "true";
 
-    // Processa a pintura visual do link da página atual
     marcarLinkAtivo(sidebar);
 };
 
@@ -198,7 +187,6 @@ window.inicializarComponentes = function () {
 // ===================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Tenta inicializar os componentes caso os containers já venham impressos direto no HTML
     if (typeof window.inicializarComponentes === "function") {
         window.inicializarComponentes();
     }

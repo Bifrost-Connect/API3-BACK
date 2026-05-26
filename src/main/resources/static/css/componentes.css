@@ -14,7 +14,7 @@ html {
 
 body {
     margin: 0 !important;
-    padding-top: calc(var(--topbar-height) + (var(--topbar-offset) * 2) + 10px) !important;
+    padding-top: 10px !important; /* Reduzido pois a barra não é mais fixa */
     overflow-x: hidden;
 }
 
@@ -57,10 +57,8 @@ section {
 }
 
 body #topbar-container .top-bar {
-    position: fixed;
-    top: var(--topbar-offset);
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative; /* Mudado de fixed para relative/static */
+    margin: var(--topbar-offset) auto 20px auto; /* Centraliza a barra e define as margens baseadas nas variáveis */
     width: var(--layout-width);
     height: var(--topbar-height);
     display: flex;
