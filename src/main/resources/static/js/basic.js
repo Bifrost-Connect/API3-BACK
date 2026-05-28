@@ -142,10 +142,13 @@ window.injetarLayout = function(titulo) {
 
 window.apiFetch = async function (endpoint, options = {}) {
     const token = localStorage.getItem(CONFIG.TOKEN_KEY);
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
+    const headers = { ...options.headers };
+
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    } else {
+        delete headers['Content-Type'];
+    }
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;

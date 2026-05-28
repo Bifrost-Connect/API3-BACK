@@ -151,7 +151,7 @@ window.carregarDadosUsuario = async function () {
             if (textNome) textNome.innerText = user.name || "Usuário";
 
             // Tratamento da imagem
-            if (user.photo && previewFoto) {
+            if (user.photo && user.photo.length > 5 && previewFoto) {
                 previewFoto.src = user.photo.startsWith("data:image") ? user.photo : `data:image/jpeg;base64,${user.photo}`;
                 previewFoto.style.display = "block";
                 if (avatarPlaceholder) avatarPlaceholder.style.display = "none";
@@ -168,20 +168,16 @@ window.carregarDadosUsuario = async function () {
 window.atualizarPreviewFoto = function (event) {
     const file = event.target.files[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const preview = document.getElementById("previewFoto");
-            const placeholder = document.getElementById("avatarPlaceholder");
+        const preview = document.getElementById("previewFoto");
+        const placeholder = document.getElementById("avatarPlaceholder");
 
-            if (preview) {
-                preview.src = e.target.result;
-                preview.style.display = "block";
-            }
-            if (placeholder) {
-                placeholder.style.display = "none";
-            }
+        if (preview) {
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
         }
-        reader.readAsDataURL(file);
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
     }
 };
 

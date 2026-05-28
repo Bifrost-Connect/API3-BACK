@@ -41,9 +41,6 @@ public class User extends BaseEntity implements UserDetails {
     private LocalDate birthDate;
     private String driverLicense;
 
-    @Column(columnDefinition = "TEXT")
-    private String image_url;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "employee_status")
     private EmployeeStatus employeeStatus;
