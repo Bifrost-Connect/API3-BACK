@@ -20,6 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -107,37 +114,70 @@ public class DashboardService {
     }
 
     /**
-     * Gera os dados para os relatórios mensais.
+     * Gera os dados para os relatórios mensais de forma completa.
      */
     public List<ServiceReportMonthDTO> getMonthlyServiceReports(int months) {
         var formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         var reports = new ArrayList<ServiceReportMonthDTO>();
+        var localePT = new Locale("pt", "BR");
 
         for (int offset = months - 1; offset >= 0; offset--) {
             YearMonth yearMonth = YearMonth.now().minusMonths(offset);
             var start = yearMonth.atDay(1).atStartOfDay();
             var end = yearMonth.atEndOfMonth().plusDays(1).atStartOfDay();
 
-            var services = serviceRepository.findByDepartureTimeBetweenAndIsActiveTrue(start, end);
+            var services = serviceRepository.findAllHistoricalByDepartureTime(start, end);
 
+            int completedCalls = 0;
+            int openCalls = 0;
             var entries = new ArrayList<ServiceReportEntryDTO>();
+
             for (var s : services) {
+                String statusStr;
+
+                if (s.getCompletionTime() != null) {
+                    statusStr = "Finalizado";
+                    completedCalls++;
+                } else if (s.getArrivalTime() == null) {
+                    statusStr = "Em andamento";
+                    openCalls++;
+                } else {
+                    statusStr = "Em aberto";
+                    openCalls++;
+                }
+
                 entries.add(new ServiceReportEntryDTO(
                         s.getId(),
-                        s.getCar() != null ? s.getCar().getPrefix() : "",
-                        s.getUser() != null ? s.getUser().getRegistration() : "",
-                        s.getUser() != null ? s.getUser().getName() : "",
+                        s.getCar() != null ? s.getCar().getPrefix() : "-",
+                        s.getUser() != null ? s.getUser().getRegistration() : "-",
+                        s.getUser() != null ? s.getUser().getName() : "-",
                         s.getDescription(),
-                        s.getDepartureTime() != null ? formatter.format(s.getDepartureTime()) : "",
-                        s.getArrivalTime() != null ? formatter.format(s.getArrivalTime()) : "",
-                        s.getCompletionTime() != null ? formatter.format(s.getCompletionTime()) : "",
-                        s.getCompletionTime() != null ? "Finalizado" : "Aberto",
+                        s.getDepartureTime() != null ? formatter.format(s.getDepartureTime()) : "-",
+                        s.getArrivalTime() != null ? formatter.format(s.getArrivalTime()) : "-",
+                        s.getCompletionTime() != null ? formatter.format(s.getCompletionTime()) : "-",
+                        statusStr,
                         s.getDepartureKm(),
                         s.getArrivalKm(),
                         s.getDestinationRequester()
                 ));
             }
-            reports.add(new ServiceReportMonthDTO(yearMonth.getMonth().name(), yearMonth.getYear(), services.size(), 0, 0, false, "", entries));
+
+            String monthName = yearMonth.getMonth().getDisplayName(TextStyle.FULL, localePT);
+            String formattedMonthLabel = monthName.substring(0, 1).toUpperCase() + monthName.substring(1);
+
+            boolean isCurrentMonth = yearMonth.equals(YearMonth.now());
+            String reportStatus = isCurrentMonth ? "Mês em andamento" : "Mês fechado";
+
+            reports.add(new ServiceReportMonthDTO(
+                    formattedMonthLabel,
+                    yearMonth.getYear(),
+                    services.size(),
+                    completedCalls,
+                    openCalls,
+                    isCurrentMonth,
+                    reportStatus,
+                    entries
+            ));
         }
         return reports;
     }

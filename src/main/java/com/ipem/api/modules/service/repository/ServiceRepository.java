@@ -27,11 +27,10 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
 
     Optional<Service> findByUserRegistrationAndIsActiveTrue(String userRegistration);
 
-    /**
-     * Busca a quilometragem final do último serviço concluído e ativo de um veículo específico.
-     * Ordenado pela data/hora de conclusão de forma decrescente para garantir o registro mais recente.
-     */
     @Query("SELECT s.arrivalKm FROM Service s WHERE s.car.prefix = :prefix AND s.completionTime IS NOT NULL AND s.isActive = true ORDER BY s.completionTime DESC LIMIT 1")
     Float findLastFinalKmByCarPrefix(@Param("prefix") String prefix);
+
+    @Query(value = "SELECT * FROM service WHERE departure_time >= :start AND departure_time < :end", nativeQuery = true)
+    List<Service> findAllHistoricalByDepartureTime(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 }

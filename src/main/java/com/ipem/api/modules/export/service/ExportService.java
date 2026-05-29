@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.PageSize;
@@ -132,8 +134,64 @@ public class ExportService {
     /**
      * Converte o resultado em Excel
      */
-    private byte[] generateExcel(List<String> headers,List<Map<String, Object>> data) {
-        // poi-ooxml
-        return new byte[0];
+    private byte[] generateExcel(List<String> headers, List<Map<String, Object>> data) {
+        // Usa o XSSFWorkbook para gerar arquivos no formato moderno .xlsx
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Relatório");
+
+            // Criação de um estilo visual para o cabeçalho (negrito e fundo cinza claro)
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            // Cria a linha 0 (Cabeçalhos)
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.size(); i++) {
+                Cell cell = headerRow.createCell(i);
+                // Converte a chave para maiúsculas apenas para apresentação no Excel
+                cell.setCellValue(headers.get(i).toUpperCase());
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Preenche os dados a partir da linha 1
+            int rowIndex = 1;
+            for (Map<String, Object> rowMap : data) {
+                Row row = sheet.createRow(rowIndex++);
+                for (int i = 0; i < headers.size(); i++) {
+                    Object value = rowMap.get(headers.get(i));
+                    Cell cell = row.createCell(i);
+
+                    if (value != null) {
+                        // Tipagem inteligente: se for número, salva como número no Excel para permitir somas
+                        if (value instanceof Number) {
+                            cell.setCellValue(((Number) value).doubleValue());
+                        } else if (value instanceof Boolean) {
+                            cell.setCellValue((Boolean) value);
+                        } else {
+                            cell.setCellValue(value.toString());
+                        }
+                    } else {
+                        cell.setCellValue("");
+                    }
+                }
+            }
+
+            // Ajusta o tamanho das colunas automaticamente para o conteúdo caber na tela
+            for (int i = 0; i < headers.size(); i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar arquivo Excel", e);
+        }
     }
 }
