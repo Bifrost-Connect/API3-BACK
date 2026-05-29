@@ -1,8 +1,6 @@
 package com.ipem.api.modules.export.controller;
 
 import com.ipem.api.modules.export.service.ExportService;
-import com.ipem.api.modules.service.dto.ServiceReportMonthDTO;
-import com.ipem.api.modules.service.service.DashboardService;
 import com.ipem.api.modules.user.service.UserService;
 import com.ipem.api.modules.vehicle.service.VehicleService;
 import org.springframework.http.HttpHeaders;
@@ -12,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/export")
@@ -21,14 +18,11 @@ public class ExportController {
     private final ExportService exportService;
     private final UserService userService;
     private final VehicleService vehicleService;
-    private final DashboardService dashboardService;
 
-
-    public ExportController(ExportService exportService, DashboardService dashboardService, UserService userService, VehicleService vehicleService) {
+    public ExportController(ExportService exportService, UserService userService, VehicleService vehicleService) {
         this.exportService = exportService;
         this.userService = userService;
         this.vehicleService = vehicleService;
-        this.dashboardService = dashboardService;
     }
 
     /**
@@ -78,16 +72,6 @@ public class ExportController {
     public ResponseEntity<byte[]> downloadVehicles(@PathVariable String format, @PathVariable String fileName) {
         List<?> data = vehicleService.findAllCars();
 
-        byte[] file = exportService.exportData(format, data);
-        return buildResponse(file, format, fileName);
-    }
-
-    /**
-     * Endpoint para exportar os relatórios Mensais.
-     */
-    @GetMapping("/{format}/reports/{fileName}")
-    public ResponseEntity<byte[]> downloadReports(@PathVariable String format, @PathVariable String fileName, @RequestParam(defaultValue = "6") int months) {
-        List<?> data = dashboardService.getMonthlyServiceReports(months);
         byte[] file = exportService.exportData(format, data);
         return buildResponse(file, format, fileName);
     }
