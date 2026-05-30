@@ -96,6 +96,13 @@ const CONFIG = Object.freeze({
             .error-details { font-size: 12px; background: #fff; padding: 10px; border: 1px solid #ffcdd2; color: #333; font-family: monospace; overflow-x: auto; margin-top: 10px; }
             @keyframes basicFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
             .toast-hidden, .toast-hidden1 { opacity: 0 !important; transition: opacity 0.5s ease; pointer-events: none; }
+            
+            /* Correções Globais para Modais e Popups */
+            .sobreposicao, .popup { z-index: 1500 !important; padding: 15px; box-sizing: border-box; align-items: center; justify-content: center; overflow-y: auto !important; }
+            .popup-card, .popup-content { max-height: 90vh !important; overflow-y: auto !important; margin: auto; display: flex; flex-direction: column; width: min(95%, 600px) !important; }
+            .popup-card::-webkit-scrollbar, .popup-content::-webkit-scrollbar { width: 6px; }
+            .popup-card::-webkit-scrollbar-thumb, .popup-content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+            .popup-card::-webkit-scrollbar-track, .popup-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         `;
         document.head.appendChild(style);
     }
@@ -264,4 +271,11 @@ window.baixarArquivo = async function (formato, recurso, parametros = {}, nomeAr
     CONFIG.injectGlobalStyles();
     CONFIG.checkAuth();
     window.btnlogout = () => CONFIG.handleLogout(false);
+    
+    // Adiciona listener global para fechar modais ao clicar na área externa (backdrop)
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('sobreposicao') || e.target.classList.contains('popup')) {
+            e.target.style.display = 'none';
+        }
+    });
 })();
