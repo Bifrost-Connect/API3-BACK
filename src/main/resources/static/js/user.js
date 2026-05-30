@@ -182,16 +182,20 @@ window.carregarDadosUsuario = async function () {
 window.atualizarPreviewFoto = function (event) {
     const file = event.target.files[0];
     if (file) {
-        const preview = document.getElementById("previewFoto");
-        const placeholder = document.getElementById("avatarPlaceholder");
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById("previewFoto");
+            const placeholder = document.getElementById("avatarPlaceholder");
 
-        if (preview) {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = "block";
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            }
+            if (placeholder) {
+                placeholder.style.display = "none";
+            }
         }
-        if (placeholder) {
-            placeholder.style.display = "none";
-        }
+        reader.readAsDataURL(file);
     }
 };
 

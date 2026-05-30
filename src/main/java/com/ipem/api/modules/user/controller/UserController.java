@@ -65,6 +65,35 @@ public class UserController {
         }
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO data) {
+        try {
+            service.requestPasswordReset(data.email());
+            return ResponseEntity.ok(Map.of("message", "E-mail de recuperação enviado com sucesso. Verifique sua caixa de entrada."));
+        } catch (org.springframework.mail.MailAuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erro de autenticação no servidor de e-mail (SMTP). Verifique a senha ou crie uma Senha de Aplicativo."));
+        } catch (org.springframework.mail.MailException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erro ao enviar o e-mail de recuperação: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password-confirm")
+    public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> data) {
+        try {
+            String token = data.get("token");
+            service.confirmPasswordReset(token);
+            return ResponseEntity.ok(Map.of("message", "Senha alterada para 'Troca123' com sucesso."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/{registration}")
     public ResponseEntity<?> getUserByRegistration(@PathVariable String registration) {
         try {

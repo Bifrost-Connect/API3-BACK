@@ -96,7 +96,7 @@ window.fecharModalRecuperacao = function () {
     }
 };
 
-window.enviarRecuperacaoSenha = function () {
+window.enviarRecuperacaoSenha = async function () {
     const emailField = document.getElementById("email-recuperacao");
     if (!emailField) return;
 
@@ -113,9 +113,25 @@ window.enviarRecuperacaoSenha = function () {
         return;
     }
 
-    window.fecharModalRecuperacao();
-    emailField.value = "";
-    window.mostrarToast("E-mail enviado com sucesso!", "toast-aviso1");
+    try {
+        const response = await window.apiFetch("/user/reset-password", {
+            method: "POST",
+            body: JSON.stringify({ email: email })
+        });
+
+        if (response && response.ok) {
+            window.fecharModalRecuperacao();
+            emailField.value = "";
+            window.mostrarToast("E-mail enviado com sucesso! Verifique sua caixa de entrada.", "toast-aviso1");
+        } else if (response) {
+            const errorData = await response.json().catch(() => ({}));
+            const mensagem = errorData.error || "Erro ao solicitar recuperação.";
+            window.mostrarToast(mensagem);
+        }
+    } catch (error) {
+        console.error("Erro ao enviar email:", error);
+        window.mostrarToast("Erro ao conectar com o servidor.");
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {

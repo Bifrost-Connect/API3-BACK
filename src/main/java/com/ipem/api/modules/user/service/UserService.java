@@ -19,10 +19,14 @@ public class UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.mail.javamail.JavaMailSender mailSender;
+    private final com.ipem.api.infrastructure.security.TokenService tokenService;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder, org.springframework.mail.javamail.JavaMailSender mailSender, com.ipem.api.infrastructure.security.TokenService tokenService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.mailSender = mailSender;
+        this.tokenService = tokenService;
     }
 
     @Transactional
@@ -130,5 +134,41 @@ public class UserService {
         });
 
         return repository.save(user);
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username}")
+    private String mailFrom;
+
+    public void requestPasswordReset(String email) {
+        User user = repository.findByEmailAndIsActiveTrue(email)
+                .orElseThrow(() -> new RuntimeException("E-mail não encontrado."));
+
+        // Altera a senha diretamente sem usar Token de confirmação
+        user.setPassword(passwordEncoder.encode("Troca123"));
+        repository.save(user);
+
+        org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+        message.setFrom(mailFrom);
+        message.setTo(user.getEmail());
+        message.setSubject("Recuperação de Senha - IPEM");
+        message.setText("Olá,\n\nSua senha foi redefinida com sucesso.\n\n" +
+                "Sua nova senha de acesso é: Troca123\n\n" +
+                "Recomendamos que você a altere após o login.");
+
+        mailSender.send(message);
+    }
+
+    @Transactional
+    public void confirmPasswordReset(String token) {
+        String email = tokenService.getResetSubject(token);
+        if (email == null) {
+            throw new RuntimeException("Token inválido ou expirado.");
+        }
+
+        User user = repository.findByEmailAndIsActiveTrue(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+        user.setPassword(passwordEncoder.encode("Troca123"));
+        repository.save(user);
     }
 }
