@@ -62,4 +62,6 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
      * Histórico completo.
      */
     List<Service> findAllByOrderByDepartureTimeDesc();
+
+    List<Service> findByDepartureTimeIsNullAndIsActiveTrue();
 }
