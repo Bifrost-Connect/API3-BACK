@@ -12,13 +12,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Service
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -31,7 +35,7 @@ public class UserService {
                 .registration(data.registration())
                 .name(data.name())
                 .email(data.email())
-                .password(data.password())
+                .password(passwordEncoder.encode(data.password()))
                 .permission(data.permission())
                 .build();
 
@@ -114,11 +118,12 @@ public class UserService {
                 case "isActive":
                     user.setIsActive((Boolean) value);
                     break;
-
                 case "photo":
                     user.setPhoto((String) value);
                     break;
-
+                case "password":
+                    user.setPassword(passwordEncoder.encode((String) value));
+                    break;
                 default:
                     break;
             }

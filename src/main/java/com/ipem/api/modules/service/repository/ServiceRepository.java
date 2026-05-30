@@ -32,7 +32,7 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     @Query("SELECT s.arrivalKm FROM Service s WHERE s.car.prefix = :prefix AND s.completionTime IS NOT NULL AND s.isActive = true ORDER BY s.completionTime DESC LIMIT 1")
     Float findLastFinalKmByCarPrefix(@Param("prefix") String prefix);
 
-    @Query(value = "SELECT * FROM service WHERE departure_time >= :start AND departure_time < :end", nativeQuery = true)
+    @Query("SELECT s FROM Service s WHERE s.departureTime >= :start AND s.departureTime < :end")
     List<Service> findAllHistoricalByDepartureTime(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // Busca todos os chamados (ativos e finalizados) para o histórico completo, ordenados por data de criação (mais recentes primeiro)

@@ -51,7 +51,7 @@ CREATE TABLE users (
     driver_license_category VARCHAR(5),
     driver_license_expiration DATE,
     employee_status ENUM('AVAILABLE', 'ON_DUTY', 'DISMISSED') DEFAULT 'AVAILABLE',
-    photo TEXT,
+    photo LONGTEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
