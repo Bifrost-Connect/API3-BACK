@@ -141,13 +141,27 @@ window.carregarDadosUsuario = async function () {
             const inputTelefone = document.getElementById("perfilTelefone");
             const selectCNH = document.getElementById("perfilCNH");
             const textNome = document.getElementById("perfilNome");
+            const textRole = document.getElementById("perfilRole");
+            const blocoCNH = document.getElementById("blocoCNH");
             const previewFoto = document.getElementById("previewFoto");
             const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+
+            // Permissão (Gestor ou Técnico)
+            const permission = (window.CONFIG && CONFIG.PERMISSION_KEY) ? localStorage.getItem(CONFIG.PERMISSION_KEY) : localStorage.getItem("userPermission");
+            const isManager = permission === "ADMINISTRATOR" || permission === "MANAGER";
+
+            if (textRole) {
+                textRole.innerText = isManager ? "Gestor" : "Técnico";
+            }
+
+            if (blocoCNH) {
+                blocoCNH.style.display = isManager ? "none" : "block";
+            }
 
             // Preenchimento de dados
             if (inputEmail) inputEmail.value = user.email || "";
             if (inputTelefone) inputTelefone.value = user.phone || "";
-            if (selectCNH) selectCNH.value = user.driverLicenseCategory || "";
+            if (selectCNH && !isManager) selectCNH.value = user.driverLicenseCategory || "";
             if (textNome) textNome.innerText = user.name || "Usuário";
 
             // Tratamento da imagem
@@ -195,11 +209,14 @@ window.salvarConfiguracoesPerfil = async function () {
     const telefoneInput = document.getElementById("perfilTelefone")?.value;
     const cnhInput = document.getElementById("perfilCNH")?.value;
 
+    const permission = (window.CONFIG && CONFIG.PERMISSION_KEY) ? localStorage.getItem(CONFIG.PERMISSION_KEY) : localStorage.getItem("userPermission");
+    const isManager = permission === "ADMINISTRATOR" || permission === "MANAGER";
+
     const payloadTexto = {};
     if (emailInput) payloadTexto.email = emailInput;
     if (senhaInput) payloadTexto.password = senhaInput;
     if (telefoneInput) payloadTexto.phone = telefoneInput;
-    if (cnhInput) payloadTexto.driverLicenseCategory = cnhInput;
+    if (cnhInput && !isManager) payloadTexto.driverLicenseCategory = cnhInput;
 
     try {
         // Função Helper para manter a compatibilidade com apiFetch ou fetch nativo

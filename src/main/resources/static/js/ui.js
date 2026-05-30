@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isTechnicianPage = technicianPages.some(page => currentPage.includes(page));
 
         // Expulsa técnicos que tentam acessar rotas do gestor
-        if (isGestorPage && permission !== "ADMINISTRATOR") {
+        if (isGestorPage && permission !== "ADMINISTRATOR" && permission !== "MANAGER") {
             window.location.href = "telainicial.html";
             return;
         }

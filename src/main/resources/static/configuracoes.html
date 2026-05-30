@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/configuracoes.css">
 </head>
 
-<body class="pagina-configuracoes" data-role="tecnico">
+<body class="pagina-configuracoes">
     <div id="topbar-container"></div>
 
     <main class="config-container">
@@ -25,8 +25,8 @@
                     <span id="avatarPlaceholder">Sem foto</span>
                 </div>
                 <div class="perfil-info">
-                    <strong id="perfilNome">Técnico</strong>
-                    <span class="perfil-role">Técnico</span>
+                    <strong id="perfilNome">Usuário</strong>
+                    <span id="perfilRole" class="perfil-role">Carregando...</span>
                 </div>
             </aside>
 
@@ -51,7 +51,7 @@
                     <input id="perfilFoto" type="file" accept="image/*" onchange="atualizarPreviewFoto(event)">
                 </div>
 
-                <div class="campo-form">
+                <div class="campo-form" id="blocoCNH">
                     <label for="perfilCNH">Categoria de CNH</label>
                     <select id="perfilCNH">
                         <option value="">Selecione a categoria</option>
