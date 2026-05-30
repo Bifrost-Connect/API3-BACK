@@ -15,6 +15,7 @@ window.salvarVeiculoInfo = async function() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+                serviceId: localStorage.getItem("chamadoPendenteId") ? parseInt(localStorage.getItem("chamadoPendenteId")) : null, // <--- ADICIONE ESTA LINHA
                 carPrefix: vehicle.prefix,
                 userRegistration: matricula,
                 recordKm: parseFloat(kmInput),
@@ -110,3 +111,69 @@ function mostrarToast1(mensagem) {
         }, 3000);
     }
 }
+
+window.carregarChamadosDisponiveis = async function() {
+    const token = localStorage.getItem("userToken");
+    const container = document.getElementById("lista-chamados-container");
+
+    if (!container) return;
+
+    try {
+        const response = await fetch("http://localhost:8080/service/pending", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const chamados = await response.json();
+
+            if (chamados.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #666;">Nenhum chamado disponível no momento.</p>`;
+                return;
+            }
+
+            container.innerHTML = "";
+
+            chamados.forEach(chamado => {
+                const card = `
+                    <div class="chamado-card">
+                        <h2 class="chamado-titulo">Serviço #${chamado.id} - Prioridade: ${chamado.priority}</h2>
+                        <div class="chamado-conteudo">
+                            <p><strong>Destino/Cliente:</strong> ${chamado.destinationRequester || 'Não informado'}</p>
+                            <p><strong>Descrição:</strong> ${chamado.description || 'Sem descrição'}</p>
+                            <p><strong>Previsão:</strong> ${chamado.expectedCompletionTime ? new Date(chamado.expectedCompletionTime).toLocaleDateString('pt-BR') : 'Sem data'}</p>
+                        </div>
+                        <button class="btn-aceitar" onclick="prepararAceiteChamado(${chamado.id})">
+                            Aceitar chamado
+                        </button>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', card);
+            });
+        } else {
+            container.innerHTML = `<p style="text-align: center; color: red;">Erro ao carregar chamados.</p>`;
+        }
+    } catch (error) {
+        console.error("Erro ao buscar chamados:", error);
+        container.innerHTML = `<p style="text-align: center; color: red;">Falha de conexão com o servidor.</p>`;
+    }
+};
+
+
+window.prepararAceiteChamado = function(idChamado) {
+
+    localStorage.setItem("chamadoPendenteId", idChamado);
+
+
+    if(typeof abrirModalConfirmacao === "function") {
+        abrirModalConfirmacao();
+    }
+}
+
+/
+document.addEventListener("DOMContentLoaded", () => {
+    carregarChamadosDisponiveis();
+});

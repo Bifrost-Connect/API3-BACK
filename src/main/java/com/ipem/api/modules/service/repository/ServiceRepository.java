@@ -34,4 +34,6 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     @Query("SELECT s.finalKm FROM Service s WHERE s.car.prefix = :prefix AND s.completionTime IS NOT NULL AND s.isActive = true ORDER BY s.completionTime DESC LIMIT 1")
     Float findLastFinalKmByCarPrefix(@Param("prefix") String prefix);
 
+    List<Service> findByDepartureTimeIsNullAndIsActiveTrue();
+
 }

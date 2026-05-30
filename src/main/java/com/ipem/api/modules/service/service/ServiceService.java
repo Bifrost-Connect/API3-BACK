@@ -74,15 +74,34 @@ public class ServiceService {
         car.setAvailable(false);
         carRepository.save(car); // Guardamos a alteração usando o repositório que já existe
 
-        // Monta a nova entidade usando o padrão Builder
-        Service newService = Service.builder()
-                .car(car)
-                .user(user)
-                .departureTime(LocalDateTime.now()) // Carimba a hora atual de saída
-                .departureKm(dto.recordKm())
-                .description(dto.note())
-                .priority(dto.priority() != null ? dto.priority() : Priority.MEDIUM)
-                .build();
+        Service newService;
+
+        // Se o front-end mandou um serviceId, significa que o técnico aceitou um chamado já existente!
+        if (dto.serviceId() != null) {
+            newService = serviceRepository.findById(dto.serviceId())
+                    .orElseThrow(() -> new RuntimeException("Chamado pendente não encontrado."));
+            newService.setCar(car);
+            newService.setUser(user);
+            newService.setDepartureTime(LocalDateTime.now()); // Carimba a hora atual de saída
+            newService.setDepartureKm(dto.recordKm());
+
+            // Concatena a observação do técnico com a descrição original do gestor
+            if (dto.note() != null && !dto.note().isBlank()) {
+                String descAtual = newService.getDescription() != null ? newService.getDescription() : "";
+                newService.setDescription(descAtual + "\n[Obs Técnico]: " + dto.note());
+            }
+        } else {
+            // Se não mandou, é um chamado "avulso" criado na hora pelo próprio técnico
+            // Monta a nova entidade usando o padrão Builder
+            newService = Service.builder()
+                    .car(car)
+                    .user(user)
+                    .departureTime(LocalDateTime.now()) // Carimba a hora atual de saída
+                    .departureKm(dto.recordKm())
+                    .description(dto.note())
+                    .priority(dto.priority() != null ? dto.priority() : Priority.MEDIUM)
+                    .build();
+        }
 
         newService.setIsActive(true); // Marca o serviço como "Em Andamento"
         return serviceRepository.save(newService);
@@ -286,4 +305,9 @@ public class ServiceService {
     public Service findActiveServiceByUser(String registration) {
         return serviceRepository.findByUserRegistrationAndIsActiveTrue(registration).orElse(null);
     }
+
+    public List<Service> getPendingServices() {
+        return serviceRepository.findByDepartureTimeIsNullAndIsActiveTrue();
+    }
+
 }

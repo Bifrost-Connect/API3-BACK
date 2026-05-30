@@ -58,4 +58,9 @@ public class ServiceController {
         }
         return ResponseEntity.ok(Map.of("active", false));
     }
+
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPendingServices() {
+        return ResponseEntity.ok(serviceService.getPendingServices());
+    }
 }
