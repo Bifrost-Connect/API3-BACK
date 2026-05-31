@@ -271,7 +271,7 @@ function atualizarResumoLocalizacao(mensagemCustomizada = "") {
 
 async function carregarChamadosDaAPI() {
     try {
-        const response = await window.apiFetch("/chamado/todos", { method: "GET" });
+        const response = await window.apiFetch("/service/pending", { method: "GET" });
         if (response && response.ok) {
             const dados = await response.json();
             chamadosGestor = dados.map(normalizarChamado);
@@ -309,15 +309,14 @@ async function criarChamado(event) {
         }
     }
 
-    const novoChamado = normalizarChamado({
-        id: Date.now(),
+    const novoChamado = {
         endereco, cep, tipoServico, tipoCNH, tecnicoResponsavel: tecnico,
         observacoes, latitude: localizacaoSelecionada.latitude, longitude: localizacaoSelecionada.longitude,
-        status: "novo", dataCriacao: new Date().toLocaleString()
-    });
+        status: "pendente"
+    };
 
     try {
-        const response = await window.apiFetch("/chamado/criar", {
+        const response = await window.apiFetch("/service/create-pending", {
             method: "POST",
             body: JSON.stringify(novoChamado)
         });

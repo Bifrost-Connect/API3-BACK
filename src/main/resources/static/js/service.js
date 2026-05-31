@@ -60,6 +60,7 @@ window.salvarVeiculoInfo = async function () {
             // Salva o ID do serviço gerado pelo Backend (necessário para o check-out/abastecimento)
             const idServico = data.serviceId || data.id;
             localStorage.setItem("activeServiceId", idServico);
+            localStorage.removeItem("chamadoPendenteId");
 
             // Guarda o KM inicial para validação contra fraudes/erros no momento do Check-out
             localStorage.setItem("km", kmInput);
@@ -232,21 +233,16 @@ window.registrarAbastecimento = async function () {
 };
 
 window.carregarChamadosDisponiveis = async function() {
-    const token = localStorage.getItem("userToken");
     const container = document.getElementById("lista-chamados-container");
 
     if (!container) return;
 
     try {
-        const response = await fetch("http://localhost:8080/service/pending", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
+        const response = await window.apiFetch("/service/pending", {
+            method: "GET"
         });
 
-        if (response.ok) {
+        if (response && response.ok) {
             const chamados = await response.json();
 
             if (chamados.length === 0) {
@@ -259,11 +255,11 @@ window.carregarChamadosDisponiveis = async function() {
             chamados.forEach(chamado => {
                 const card = `
                     <div class="chamado-card">
-                        <h2 class="chamado-titulo">Serviço #${chamado.id} - Prioridade: ${chamado.priority}</h2>
+                        <h2 class="chamado-titulo">Serviço #${chamado.id} - ${chamado.tipoServico || 'Novo'}</h2>
                         <div class="chamado-conteudo">
-                            <p><strong>Destino/Cliente:</strong> ${chamado.destinationRequester || 'Não informado'}</p>
-                            <p><strong>Descrição:</strong> ${chamado.description || 'Sem descrição'}</p>
-                            <p><strong>Previsão:</strong> ${chamado.expectedCompletionTime ? new Date(chamado.expectedCompletionTime).toLocaleDateString('pt-BR') : 'Sem data'}</p>
+                            <p><strong>Endereço:</strong> ${chamado.endereco || 'Não informado'}</p>
+                            <p><strong>Observações:</strong> ${chamado.observacoes || 'Sem descrição'}</p>
+                            <p><strong>Criado em:</strong> ${chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data'}</p>
                         </div>
                         <button class="btn-aceitar" onclick="prepararAceiteChamado(${chamado.id})">
                             Aceitar chamado

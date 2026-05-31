@@ -32,10 +32,16 @@ import java.util.*;
  * Responsável por controlar check-ins, check-outs, abastecimentos,
  * geração de relatórios mensais e auditoria do histórico (Envers).
  */
+import com.ipem.api.modules.service.dto.PendingServiceRequestDTO;
+import com.ipem.api.modules.service.dto.PendingServiceResponseDTO;
+import com.ipem.api.modules.service.model.ServiceAddresses;
+import com.ipem.api.modules.service.repository.ServiceAddressesRepository;
+
 @org.springframework.stereotype.Service
 public class ServiceService {
 
     private final ServiceRepository serviceRepository;
+    private final ServiceAddressesRepository serviceAddressesRepository;
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final RecordRepository recordRepository;
@@ -45,10 +51,15 @@ public class ServiceService {
     /**
      * Injeção de dependências via construtor (Melhor prática do Spring, garante imutabilidade).
      */
-    public ServiceService(ServiceRepository serviceRepository, CarRepository carRepository,
-                          UserRepository userRepository, RecordRepository recordRepository,
-                          RefuelingRepository refuelingRepository, EntityManager entityManager) {
+    public ServiceService(ServiceRepository serviceRepository, 
+                          ServiceAddressesRepository serviceAddressesRepository,
+                          CarRepository carRepository, 
+                          UserRepository userRepository, 
+                          RecordRepository recordRepository,
+                          RefuelingRepository refuelingRepository, 
+                          EntityManager entityManager) {
         this.serviceRepository = serviceRepository;
+        this.serviceAddressesRepository = serviceAddressesRepository;
         this.carRepository = carRepository;
         this.userRepository = userRepository;
         this.recordRepository = recordRepository;
@@ -307,6 +318,51 @@ public class ServiceService {
 
     public List<Service> getPendingServices() {
         return serviceRepository.findByDepartureTimeIsNullAndIsActiveTrue();
+    }
+
+    @Transactional
+    public Service createPendingService(PendingServiceRequestDTO dto) {
+        Service service = Service.builder()
+                .destinationRequester(dto.endereco())
+                .description(dto.observacoes() != null ? dto.observacoes() : dto.tipoServico())
+                .isActive(true)
+                // Note: user and car are null
+                .build();
+        
+        service = serviceRepository.save(service);
+
+        ServiceAddresses address = ServiceAddresses.builder()
+                .service(service)
+                .street(dto.endereco() != null ? dto.endereco() : "Não informado")
+                .zipCode(dto.cep())
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
+                .city("São Paulo") // default
+                .state("SP") // default
+                .build();
+        
+        serviceAddressesRepository.save(address);
+        return service;
+    }
+
+    public List<PendingServiceResponseDTO> getPendingServicesDTOs() {
+        List<Service> services = getPendingServices();
+        return services.stream().map(service -> {
+            ServiceAddresses address = serviceAddressesRepository.findByServiceId(service.getId()).stream().findFirst().orElse(null);
+            return new PendingServiceResponseDTO(
+                    service.getId(),
+                    address != null ? address.getStreet() : service.getDestinationRequester(),
+                    address != null ? address.getZipCode() : "",
+                    service.getDescription(), // assuming this holds the service type for now
+                    "Nenhuma", // tipoCNH mock
+                    "Não atribuído", // tecnico mock
+                    address != null ? address.getLatitude() : null,
+                    address != null ? address.getLongitude() : null,
+                    service.getDescription(),
+                    "pendente",
+                    service.getCreatedAt()
+            );
+        }).toList();
     }
 
 }

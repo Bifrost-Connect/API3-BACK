@@ -63,13 +63,12 @@ window.renderizarSidebarGestor = function () {
             </div>
             
             <div class="sidebar-nav">
-                <a href="telainicial-gestor.html">TELA INICIAL</a>
-                <a href="veiculos-gestor.html">VEÍCULOS</a>
-                <a href="chamados.html">CHAMADOS</a>
-                <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
+                <a href="telainicial-gestor.html">TELA INICIAL GESTOR</a>
+                <a href="veiculos-gestor.html">GERENCIAR VEÍCULOS</a>
                 <a href="tela-mapa-gestor.html">GERENCIAR CHAMADOS</a>
+                <a href="tecnicos-gestor.html">GERENCIAR TÉCNICOS</a>
+                <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
                 <a href="relatorios.html">RELATÓRIOS</a>
-                <a href="tecnicos-gestor.html">TÉCNICOS</a>
                 
                 <div class="sidebar-submenu-container">
                     <button id="btn-cadastro" class="sidebar-item-expandavel" type="button" aria-expanded="false">
@@ -81,6 +80,11 @@ window.renderizarSidebarGestor = function () {
                         <a href="cadastrousuarios.html" class="submenu-item">Cadastrar usuários</a>
                     </div>
                 </div>
+
+                <!-- Visão do Técnico -->
+                <div style="margin-top: 15px; margin-bottom: 5px; padding-left: 20px; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Visão Técnico</div>
+                <a href="telainicial.html">TELA INICIAL (TÉCNICO)</a>
+                <a href="chamados.html">MEUS CHAMADOS (TÉCNICO)</a>
                 
                 <a href="configuracoes.html">CONFIGURAÇÕES</a>
             </div>

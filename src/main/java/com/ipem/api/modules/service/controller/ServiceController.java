@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.Optional;
+import com.ipem.api.modules.service.dto.PendingServiceRequestDTO;
 
 @RestController
 @RequestMapping("/service")
@@ -61,6 +62,12 @@ public class ServiceController {
 
     @GetMapping("/pending")
     public ResponseEntity<?> getPendingServices() {
-        return ResponseEntity.ok(serviceService.getPendingServices());
+        return ResponseEntity.ok(serviceService.getPendingServicesDTOs());
+    }
+
+    @PostMapping("/create-pending")
+    public ResponseEntity<?> createPendingService(@RequestBody PendingServiceRequestDTO dto) {
+        var service = serviceService.createPendingService(dto);
+        return ResponseEntity.ok(Map.of("serviceId", service.getId(), "message", "Chamado pendente criado com sucesso"));
     }
 }

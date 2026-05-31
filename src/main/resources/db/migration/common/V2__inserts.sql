@@ -503,3 +503,25 @@ INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, depart
                                                                                                                                                                                       (48, 48, 0, 'CAR008', '10004', '2026-05-07 07:00:00', '2026-05-07 13:30:00', 95500.0, 'SJC', 'Manutenção corretiva e aferição', 'HIGH', 0),
                                                                                                                                                                                       (49, 49, 0, 'CAR014', '10007', '2026-05-07 08:30:00', '2026-05-07 14:00:00', 4200.0, 'Mogi das Cruzes', 'Transporte Administrativo', 'MEDIUM', 0),
                                                                                                                                                                                       (50, 50, 0, 'CAR020', '10015', '2026-05-07 09:00:00', '2026-05-07 16:30:00', 11800.0, 'Hortolândia', 'Ronda Fiscal', 'MEDIUM', 0);
+INSERT INTO service (id, car_prefix, user_registration, departure_time, completion_time, departure_km, destination_requester, description, priority, is_active)
+VALUES
+(51, NULL, NULL, NULL, NULL, NULL, 'Rua Augusta, 1000 - Consolação, São Paulo', 'Manutenção Preventiva no Medidor de Energia', 'HIGH', 1),
+(52, NULL, NULL, NULL, NULL, NULL, 'Av. Brigadeiro Faria Lima, 2000 - Pinheiros, São Paulo', 'Inspeção de Balanças no Supermercado XYZ', 'MEDIUM', 1),
+(53, NULL, NULL, NULL, NULL, NULL, 'Praça da Sé, 1 - Centro, São Paulo', 'Instalação de equipamento novo', 'LOW', 1);
+
+INSERT INTO service_addresses (service_id, street, number, neighborhood, city, state, zip_code, latitude, longitude)
+VALUES
+(51, 'Rua Augusta', '1000', 'Consolação', 'São Paulo', 'SP', '01305-100', -23.5550, -46.6550),
+(52, 'Av. Brigadeiro Faria Lima', '2000', 'Pinheiros', 'São Paulo', 'SP', '01451-000', -23.5750, -46.6850),
+(53, 'Praça da Sé', '1', 'Centro', 'São Paulo', 'SP', '01001-000', -23.5505, -46.6333);
+
+INSERT INTO revinfo (rev, revtstmp) VALUES
+(51, 1780000000000),
+(52, 1780000000001),
+(53, 1780000000002);
+
+INSERT INTO service_aud (id, rev, revtype, car_prefix, user_registration, departure_time, completion_time, departure_km, destination_requester, description, priority, is_active)
+VALUES
+(51, 51, 0, NULL, NULL, NULL, NULL, NULL, 'Rua Augusta, 1000 - Consolação, São Paulo', 'Manutenção Preventiva no Medidor de Energia', 'HIGH', 1),
+(52, 52, 0, NULL, NULL, NULL, NULL, NULL, 'Av. Brigadeiro Faria Lima, 2000 - Pinheiros, São Paulo', 'Inspeção de Balanças no Supermercado XYZ', 'MEDIUM', 1),
+(53, 53, 0, NULL, NULL, NULL, NULL, NULL, 'Praça da Sé, 1 - Centro, São Paulo', 'Instalação de equipamento novo', 'LOW', 1);

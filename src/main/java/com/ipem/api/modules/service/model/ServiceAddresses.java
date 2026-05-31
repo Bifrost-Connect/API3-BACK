@@ -44,6 +44,12 @@ public class ServiceAddresses extends BaseEntity {
     @Column(length = 150)
     private String complement;
 
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
     @Builder.Default
     @Column(name = "is_active", columnDefinition = "boolean default true")
     private Boolean isActive = true;
