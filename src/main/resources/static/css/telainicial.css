@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -328,6 +328,13 @@ body {
     max-width: 420px;
 }
 
+.lista-veiculos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
 .btn-veiculo,
 .btn-aceitar,
 .btn-voltar {
@@ -397,6 +404,7 @@ body {
 
 #inputPesquisa {
     flex: 1;
+    /* Faz o input ocupar o máximo de espaço */
     padding: 12px 15px;
     border: 1px solid #d7d7d7;
     border-radius: 8px;
@@ -466,21 +474,26 @@ body {
     background-color: #f0f0f0;
 }
 
+/* Estilo do ícone */
 .icone-filtro-fixo {
     width: 20px;
     height: 20px;
     opacity: 0.7;
     pointer-events: none;
+    /* Faz o clique passar direto para o select */
 }
 
+/* O select fica por cima, mas totalmente transparente */
 .select-invisivel {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     opacity: 0;
+    /* Torna o select invisível */
     cursor: pointer;
     appearance: none;
+    /* Remove a setinha padrão do navegador */
 }
 
 .btn-filtro-abrir {
@@ -500,8 +513,50 @@ body {
     opacity: 0.7;
 }
 
+/* Card menor para o filtro */
 .popup-filtro-menor {
     max-width: 350px !important;
+}
+
+.btn-flutuante {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1100;
+    background-color: #12308f;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 18px;
+    box-shadow: 0 16px 30px rgba(18, 48, 143, 0.25);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.btn-flutuante:hover {
+    background-color: #0e2877;
+}
+
+.popup-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: #444;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#popupContatos .popup-content {
+    max-width: 520px;
+    padding: 32px 24px 24px;
+}
+
+#popupContatos .popup-conteudo p {
+    margin-bottom: 18px;
 }
 
 .grupo-filtro {
@@ -558,7 +613,7 @@ body {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #ff4d4d;
+    background-color: #ff4d4d; /* Vermelho para erro */
     color: white;
     padding: 12px 25px;
     border-radius: 8px;
@@ -592,7 +647,6 @@ body {
     display: none;
     opacity: 0;
 }
-
 
 .input-group-km {
     display: flex;
@@ -642,7 +696,7 @@ input[readonly] {
     cursor: not-allowed;
 }
 
-/* Responsividade para Mobile */
+/* Ajuste opcional para dispositivos móveis */
 @media (max-width: 480px) {
     .container-pesquisa {
         flex-direction: column;
@@ -666,31 +720,4 @@ input[readonly] {
     .popup-detalhes-imagem img {
         max-width: 180px;
     }
-}
-
-/* Área de seleção de carros com a Scroll Bar ativa */
-.lista-veiculos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 14px;
-    max-height: 350px;
-    overflow-y: auto;
-    padding-right: 8px;
-}
-
-/* Customização fina da barra de rolagem (Webkit) */
-.lista-veiculos::-webkit-scrollbar {
-    width: 6px;
-}
-.lista-veiculos::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-.lista-veiculos::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-.lista-veiculos::-webkit-scrollbar-thumb:hover {
-    background: #999;
 }

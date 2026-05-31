@@ -64,7 +64,7 @@ window.renderizarSidebarGestor = function () {
             
             <div class="sidebar-nav">
                 <a href="telainicial-gestor.html">TELA INICIAL</a>
-                <a href="telainicial.html">SELECIONAR VEICULO</a>
+                <a href="veiculos-gestor.html">VEÍCULOS</a>
                 <a href="chamados.html">CHAMADOS</a>
                 <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
                 <a href="tela-mapa-gestor.html">GERENCIAR CHAMADOS</a>
@@ -183,11 +183,30 @@ window.inicializarComponentes = function () {
 };
 
 // ===================================================================
-// 4. GATILHO DE AUTO-INICIALIZAÇÃO
+// 4. GATILHO DE AUTO-INICIALIZAÇÃO E UTILITÁRIOS
 // ===================================================================
+
+window.inicializarFechamentoPopupClickFora = function () {
+    document.addEventListener("click", (event) => {
+        const popupOverlay = event.target.closest(".popup, .sobreposicao");
+        if (!popupOverlay) {
+            return;
+        }
+
+        const isInsideContent = event.target.closest(".popup-card, .popup-content");
+        if (isInsideContent) {
+            return;
+        }
+
+        popupOverlay.style.display = "none";
+    });
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof window.inicializarComponentes === "function") {
         window.inicializarComponentes();
+    }
+    if (typeof window.inicializarFechamentoPopupClickFora === "function") {
+        window.inicializarFechamentoPopupClickFora();
     }
 });
