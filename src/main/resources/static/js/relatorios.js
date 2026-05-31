@@ -26,7 +26,7 @@ let selectedReportIndex = 0;
 async function carregarRelatoriosDaAPI() {
     const tbody = document.querySelector(".relatorios-table tbody");
     if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">Carregando relatórios...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px;">Carregando relatórios...</td></tr>`;
     }
 
     try {
@@ -172,6 +172,7 @@ function atualizarTabela(entries) {
             <td>${entry.departureTime || "-"}</td>
             <td>${entry.completionTime || "-"}</td>
             <td><span class="status-chip ${statusClass}">${entry.status || "-"}</span></td>
+            <td>${entry.refuelingInfo || "-"}</td>
         `;
         tbody.appendChild(row);
     });
@@ -180,7 +181,7 @@ function atualizarTabela(entries) {
 function mostrarErroNaTabela(mensagem) {
     const tbody = document.querySelector(".relatorios-table tbody");
     if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#67717b; padding:28px 0;">${mensagem}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#67717b; padding:28px 0;">${mensagem}</td></tr>`;
     }
 }
 

@@ -20,4 +20,15 @@ public interface RefuelingRepository extends JpaRepository<Refueling, Long> {
 
     @Query("SELECT COALESCE(AVG(r.pricePerLiter), 0.0) FROM Refueling r JOIN r.record rec WHERE MONTH(rec.recordDate) = MONTH(CURRENT_DATE) AND YEAR(rec.recordDate) = YEAR(CURRENT_DATE) AND r.isActive = true")
     Double avgMonthlyPricePerLiter();
+
+    @Query("""
+    SELECT r
+    FROM Refueling r
+    JOIN r.record rec
+    WHERE rec.service.id = :serviceId
+      AND r.isActive = true
+      AND rec.isActive = true
+    ORDER BY rec.recordDate DESC
+""")
+    List<Refueling> findByServiceId(@Param("serviceId") Long serviceId);
 }

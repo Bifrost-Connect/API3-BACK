@@ -326,6 +326,24 @@ public class DashboardService {
                     openCalls++;
                 }
 
+                List<Refueling> abastecimentos =
+                        refuelingRepository.findByServiceId(s.getId());
+
+                String refuelingInfo = abastecimentos.isEmpty()
+                        ? "-"
+                        : abastecimentos.stream()
+                        .map(ref -> String.format(
+                                "Litros: %s | Preço/L: R$ %.2f | Total: R$ %.2f | NF: %s | Combustível: %s | Posto: %s",
+                                ref.getLiters() != null ? ref.getLiters() : "-",
+                                ref.getPricePerLiter() != null ? ref.getPricePerLiter() : 0.0,
+                                ref.getTotalAmount() != null ? ref.getTotalAmount() : 0.0,
+                                ref.getInvoice() != null ? ref.getInvoice() : "-",
+                                ref.getFuelType() != null ? ref.getFuelType().name() : "-",
+                                ref.getGasStationName() != null ? ref.getGasStationName() : "-"
+                        ))
+                        .reduce((a, b) -> a + " || " + b)
+                        .orElse("-");
+
                 entries.add(new ServiceReportEntryDTO(
                         s.getId(),
                         s.getCar() != null ? s.getCar().getPrefix() : "-",
@@ -338,7 +356,8 @@ public class DashboardService {
                         statusStr,
                         s.getDepartureKm(),
                         s.getArrivalKm(),
-                        s.getDestinationRequester()
+                        s.getDestinationRequester(),
+                        refuelingInfo
                 ));
             }
 

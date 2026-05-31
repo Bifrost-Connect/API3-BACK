@@ -235,7 +235,8 @@ public class ServiceService {
                         service.getCompletionTime() != null ? "Finalizado" : "Em andamento",
                         service.getDepartureKm(),
                         service.getArrivalKm(),
-                        service.getDestinationRequester()
+                        service.getDestinationRequester(),
+                        "-"
                 ));
             }
             // Adiciona o mês processado à lista final
