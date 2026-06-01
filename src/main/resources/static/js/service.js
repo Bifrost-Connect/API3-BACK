@@ -178,23 +178,18 @@ window.abrirPopupAbastecimento = function() {
     if (popup) popup.style.display = 'flex';
 };
 
-/**
- * Função: registrarAbastecimento
- * O que faz: Relaciona um registro de combustível ao serviço ativo atual.
- * Calcula o valor total e consome o endpoint de injeção de combustível.
- * Requisição: POST /service/{serviceId}/fuel
- */
-window.registrarAbastecimento = async function () {
-    const serviceId = localStorage.getItem("activeServiceId");
+window.fecharPopupAbastecimento = function() {
+    const popup = document.getElementById('popupAbastecimento');
+    if (popup) popup.style.display = 'none';
+};
 
-    // Captura os dados
+window.registrarAbastecimento = function () {
+    const serviceId = localStorage.getItem("activeServiceId");
     const litros = document.getElementById("litros-abastecimento")?.value;
     const preco = document.getElementById("preco-litro")?.value;
     const data = document.getElementById("data-abastecimento")?.value;
     const hora = document.getElementById("hora-abastecimento")?.value;
-
-    // NOVO: Captura a KM exata do momento do abastecimento
-    const kmAbastecimento = document.getElementById("km-abastecimento")?.value;
+    const kmAbastecimento = document.getElementById("km-veiculo")?.value;
 
     if (!serviceId) {
         window.mostrarToast("Nenhum serviço ativo. Faça o check-in primeiro.");
@@ -205,12 +200,30 @@ window.registrarAbastecimento = async function () {
         window.mostrarToast("Preencha Litros, Preço, Data, Horário e a KM atual.");
         return;
     }
-    // CORREÇÃO: Substitui vírgula por ponto para o parseFloat funcionar no padrão PT-BR
+
+    // Fecha o modal de preenchimento e abre o de confirmacao
+    window.fecharPopupAbastecimento();
+    const popupConf = document.getElementById('popupConfirmacao');
+    if (popupConf) popupConf.style.display = 'flex';
+};
+
+window.fecharPopupConfirmacaoAbastecimento = function() {
+    const popupConf = document.getElementById('popupConfirmacao');
+    if (popupConf) popupConf.style.display = 'none';
+    window.abrirPopupAbastecimento();
+};
+
+window.confirmarAbastecimentoFinal = async function() {
+    const serviceId = localStorage.getItem("activeServiceId");
+    const litros = document.getElementById("litros-abastecimento")?.value;
+    const preco = document.getElementById("preco-litro")?.value;
+    const data = document.getElementById("data-abastecimento")?.value;
+    const hora = document.getElementById("hora-abastecimento")?.value;
+    const kmAbastecimento = document.getElementById("km-veiculo")?.value;
+
     const litrosNum = parseFloat(litros.replace(',', '.'));
     const precoNum = parseFloat(preco.replace(',', '.'));
     const kmNum = parseFloat(kmAbastecimento.replace(',', '.'));
-
-    // Calcula o valor total com os números corrigidos
     const valorTotal = (litrosNum * precoNum).toFixed(2);
     const dataHoraIso = `${data}T${hora}:00`;
 
@@ -221,17 +234,16 @@ window.registrarAbastecimento = async function () {
                 amount: litrosNum,
                 totalValue: parseFloat(valorTotal),
                 date: dataHoraIso,
-                recordKm: kmNum // NOVO: Enviando a KM atualizada para o backend
+                recordKm: kmNum
             })
         });
 
         if (response && response.ok) {
-            const popupConfAbs = document.getElementById('popupConfirmacaoAbs');
-            const popupAbs = document.getElementById('popupAbastecimento');
-            if (popupConfAbs) popupConfAbs.style.display = 'none';
-            if (popupAbs) popupAbs.style.display = 'none';
-
-            window.mostrarToast("Abastecimento registrado com sucesso!", "toast-aviso1");
+            const popupConf = document.getElementById('popupConfirmacao');
+            if (popupConf) popupConf.style.display = 'none';
+            
+            const popupSucesso = document.getElementById('popupSucesso');
+            if (popupSucesso) popupSucesso.style.display = 'flex';
         } else if (response) {
             const erro = await response.json();
             window.mostrarToast("Erro ao abastecer: " + (erro.error || "Falha na operação"));
@@ -242,10 +254,162 @@ window.registrarAbastecimento = async function () {
     }
 };
 
+window.fecharPopupSucessoAbastecimento = function() {
+    const popupSucesso = document.getElementById('popupSucesso');
+    if (popupSucesso) popupSucesso.style.display = 'none';
+};
+
+// ===================================================================
+// 4. CANCELAMENTO DE CHECK-IN E CHAMADOS
+// ===================================================================
+
+window.abrirPopupCancelamento = function() {
+    const popup = document.getElementById('popupcancheckin');
+    if (popup) {
+        popup.style.display = 'flex';
+    } else {
+        console.error("Erro: Elemento 'popupcancheckin' não encontrado no HTML.");
+    }
+};
+
+window.fecharPopupCancelamento = function() {
+    const popup = document.getElementById('popupcancheckin');
+    if (popup) popup.style.display = 'none';
+};
+
+window.confirmarCancelamentoCheckin = async function() {
+    const motivo = document.getElementById('cancelamentocheckin')?.value;
+
+    if (!motivo || motivo.trim() === "") {
+        window.mostrarToast("Por favor, digite o motivo do cancelamento.");
+        return;
+    }
+
+    const serviceId = localStorage.getItem("activeServiceId");
+
+    if (serviceId && serviceId !== "null" && serviceId !== "undefined") {
+        // Envia o cancelamento para o backend (registra ocorrência + encerra serviço)
+        try {
+            const response = await window.apiFetch(`/service/${serviceId}/cancel`, {
+                method: "POST",
+                body: JSON.stringify({ description: motivo.trim() })
+            });
+
+            if (response && !response.ok) {
+                const erro = await response.json().catch(() => ({}));
+                console.warn("Erro ao cancelar no servidor:", erro);
+            }
+        } catch (error) {
+            console.warn("Falha ao conectar com o servidor para cancelamento:", error);
+        }
+    }
+
+    // Fecha o popup de pergunta
+    window.fecharPopupCancelamento();
+
+    // Abre o popup de sucesso
+    const popupSucesso = document.getElementById('popupSucessoCancelamento');
+    if (popupSucesso) popupSucesso.style.display = 'flex';
+};
+
+window.fecharPopupSucessoCancelamento = function() {
+    const popupSucesso = document.getElementById('popupSucessoCancelamento');
+    if (popupSucesso) {
+        popupSucesso.style.display = 'none';
+    }
+
+    // Limpeza radical do estado local para destravar o sistema
+    localStorage.removeItem("selectedVehicle");
+    localStorage.removeItem("km");
+    localStorage.removeItem("obs");
+    localStorage.removeItem("activeServiceId");
+    localStorage.removeItem("chamadoPendenteId");
+
+    // Força a página a recarregar limpa
+    window.location.reload();
+};
+
+
+// ===================================================================
+// 5. REGISTRO DE OCORRÊNCIA / DEFEITO (DURANTE O SERVIÇO)
+// ===================================================================
+
+window.abrirPopupOcorrencia = function() {
+    const popup = document.getElementById('popupOcorrencia');
+    if (popup) {
+        popup.style.display = 'flex';
+    } else {
+        console.error("Erro: Elemento 'popupOcorrencia' não encontrado no HTML.");
+    }
+};
+
+window.fecharPopupOcorrencia = function() {
+    const popup = document.getElementById('popupOcorrencia');
+    if (popup) popup.style.display = 'none';
+};
+
+window.registrarOcorrencia = async function() {
+    const descricao = document.getElementById('descricao-ocorrencia')?.value;
+    const gravidade = document.getElementById('gravidade-ocorrencia')?.value || 'MEDIUM';
+    const pedirSuporte = document.getElementById('suporte-ocorrencia')?.checked || false;
+
+    if (!descricao || descricao.trim() === "") {
+        window.mostrarToast("Por favor, descreva a ocorrência.");
+        return;
+    }
+
+    const serviceId = localStorage.getItem("activeServiceId");
+    if (!serviceId || serviceId === "null") {
+        window.mostrarToast("Nenhum serviço ativo para registrar ocorrência.");
+        return;
+    }
+
+    try {
+        const response = await window.apiFetch(`/service/${serviceId}/incident`, {
+            method: "POST",
+            body: JSON.stringify({
+                description: descricao.trim(),
+                incidentType: "DEFECT",
+                severity: gravidade,
+                requestSupport: pedirSuporte
+            })
+        });
+
+        if (response && response.ok) {
+            window.fecharPopupOcorrencia();
+
+            // Limpa o formulário
+            const descEl = document.getElementById('descricao-ocorrencia');
+            if (descEl) descEl.value = '';
+            const supEl = document.getElementById('suporte-ocorrencia');
+            if (supEl) supEl.checked = false;
+
+            const popupSucesso = document.getElementById('popupSucessoOcorrencia');
+            if (popupSucesso) {
+                popupSucesso.style.display = 'flex';
+            } else {
+                window.mostrarToast("Ocorrência registrada com sucesso!", "toast-aviso1");
+            }
+        } else if (response) {
+            const erro = await response.json().catch(() => ({}));
+            window.mostrarToast("Erro: " + (erro.error || "Falha ao registrar ocorrência."));
+        }
+    } catch (error) {
+        console.error("Erro ao registrar ocorrência:", error);
+        window.mostrarToast("Falha de conexão com o servidor.");
+    }
+};
+
+window.fecharPopupSucessoOcorrencia = function() {
+    const popup = document.getElementById('popupSucessoOcorrencia');
+    if (popup) popup.style.display = 'none';
+};
+
 window.carregarChamadosDisponiveis = async function() {
     const container = document.getElementById("lista-chamados-container");
-
     if (!container) return;
+
+    const quadroDireito = container.closest(".quadro-direito");
 
     try {
         const response = await window.apiFetch("/service/pending", {
@@ -262,10 +426,12 @@ window.carregarChamadosDisponiveis = async function() {
             const isPendente = chamadoPendenteId && chamadoPendenteId !== "null" && chamadoPendenteId !== "undefined";
 
             if (isAtivo || isPendente) {
+                if (quadroDireito) quadroDireito.style.display = 'none';
                 container.style.display = 'none';
                 return;
             }
 
+            if (quadroDireito) quadroDireito.style.display = 'block';
             container.style.display = 'block';
 
             if (chamados.length === 0) {
@@ -333,7 +499,7 @@ window.transicaoPosCheckin = function () {
         if (el) el.style.display = 'none';
     });
 
-    const IDsMostrar = ['grupo-km-final', 'btn-abs-veiculo', 'btn-checkout'];
+    const IDsMostrar = ['grupo-km-final', 'btn-abs-veiculo', 'btn-checkout', 'btn-cancelar-veiculo2', 'btn-ocorrencia-veiculo'];
     IDsMostrar.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'inline-block';
@@ -443,27 +609,34 @@ window.abrirDetalhesChamado = function (id) {
     const chamado = window.chamadosDisponiveis.find((item) => item.id === id);
     if (!chamado) return;
 
-    const infoChamado = document.getElementById("info-chamado");
-    if (!infoChamado) return;
+    const modal = document.getElementById("modalDetalheChamado");
+    const titulo = document.getElementById("modalTitulo");
+    const conteudo = document.getElementById("modalConteudo");
+
+    if (!modal || !conteudo) return;
 
     const dataFormatada = chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data';
 
-    infoChamado.style.display = 'block';
-    infoChamado.innerHTML = `
-        <div style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <h4 style="margin-top: 0;">Detalhes do Chamado</h4>
-            <p><strong>Endereço:</strong> ${chamado.endereco || "Não informado"}</p>
-            <p><strong>Tipo:</strong> ${chamado.tipoServico || "Não informado"}</p>
-            <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
-            <p><strong>Criado em:</strong> ${dataFormatada}</p>
-            <button onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')" class="btn-confirmar">Aceitar Chamado</button>
-            <button onclick="window.atualizarPainelChamadoAtual()" style="margin-left: 5px;">Voltar</button>
-        </div>
+    if (titulo) {
+        titulo.textContent = `Chamado - ${chamado.tipoServico || "Detalhes"}`;
+    }
+
+    conteudo.innerHTML = `
+        <p><strong>Endereço:</strong> ${chamado.endereco || "Não informado"}</p>
+        <p><strong>Tipo de Serviço:</strong> ${chamado.tipoServico || "Não informado"}</p>
+        <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
+        <p><strong>Criado em:</strong> ${dataFormatada}</p>
     `;
 
-    if (tituloEl) tituloEl.textContent = `Chamado - ${chamado.endereco || "Sem endereço"}`;
-    if (conteudoEl) conteudoEl.innerHTML = conteudo;
-    if (modalEl) modalEl.style.display = "flex";
+    const popupButtons = modal.querySelector(".popup-buttons");
+    if (popupButtons) {
+        popupButtons.innerHTML = `
+            <button class="btn-voltar" onclick="window.fecharModalDetalhes()">Recusar</button>
+            <button class="btn-aceitar" onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')">Aceitar</button>
+        `;
+    }
+
+    modal.style.display = "flex";
 };
 
 window.fecharModalDetalhes = function () {

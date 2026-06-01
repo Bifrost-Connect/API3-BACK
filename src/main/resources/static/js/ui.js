@@ -322,54 +322,65 @@ function salvarEdicaoKM() {
     console.log("Nova KM salva:", input.value);
 }
 
-// cancelar check-in
-document.addEventListener("DOMContentLoaded", function () {
-    // Referências dos elementos do DOM
-    const btnCancelar2 = document.getElementById("btn-cancelar-veiculo2");
+// Nota: O fluxo de cancelamento de check-in é controlado pelas
+// funções onclick em service.js (confirmarCancelamentoCheckin, etc.)
+// que se comunicam com a API do backend.
 
-    const popupCanCheckin = document.getElementById("popupcancheckin");
-    const btnVoltarCancelamento = document.getElementById("btn-cancelar-confirmacao1");
-    const btnConfirmarCancelamento = document.getElementById("btn-confirmar-cancelamento");
 
-    const popupSucessoCancelamento = document.getElementById("popupSucessoCancelamento");
-    const btnFecharSucessoCancelamento = document.getElementById("btn-fechar-sucesso-cancelamento");
+const popupConfirmacao = document.getElementById("popupConfirmacao");
+const btnCancelarConfirmacao = document.getElementById("btn-cancelar-confirmacao");
+const btnConfirmarFinal = document.getElementById("btn-confirmar-final");
 
-    if (btnCancelar2) {
-        btnCancelar2.addEventListener("click", function () {
-            popupCanCheckin.style.display = "flex";
-        });
+// Variável para guardar o ID do chamado que o usuário quer apagar
+let idChamadoParaDeletar = null;
+
+/**
+ * Função global para abrir o pop-up de confirmação
+ * @param {number|string} id - O ID do chamado que será excluído
+ */
+window.abrirPopupConfirmacao = function(id) {
+    idChamadoParaDeletar = id;
+    if (popupConfirmacao) {
+        popupConfirmacao.style.display = "flex"; // Abre o pop-up centralizado
     }
+};
 
-    if (btnVoltarCancelamento) {
-        btnVoltarCancelamento.addEventListener("click", function () {
-            popupCanCheckin.style.display = "none";
-            document.getElementById("cancelamentocheckin").value = "";
-        });
+/**
+ * Função global para fechar o pop-up
+ */
+window.fecharPopupConfirmacao = function() {
+    idChamadoParaDeletar = null;
+    if (popupConfirmacao) {
+        popupConfirmacao.style.display = "none"; // Esconde o pop-up
     }
+};
 
-    if (btnConfirmarCancelamento) {
-        btnConfirmarCancelamento.addEventListener("click", function () {
-            const motivo = document.getElementById("cancelamentocheckin").value.trim();
+// Configura o botão "Voltar" (Cancelar) para fechar o pop-up
+if (btnCancelarConfirmacao) {
+    btnCancelarConfirmacao.addEventListener("click", window.fecharPopupConfirmacao);
+}
 
-            if (motivo === "") {
-                window.mostrarToast("Por favor, digite o motivo do cancelamento.");
-                return;
+// Configura o botão "Confirmar" para executar a exclusão
+if (btnConfirmarFinal) {
+    btnConfirmarFinal.addEventListener("click", function() {
+        if (!idChamadoParaDeletar) return;
+
+        // 1. Lógica de exclusão delegada para a função do mapa/serviço correspondente
+        if (typeof window.executarExclusaoChamado === "function") {
+            window.executarExclusaoChamado(idChamadoParaDeletar);
+        } else {
+            console.log("Chamado excluído com ID:", idChamadoParaDeletar);
+            if (typeof window.mostrarToast === "function") {
+                window.mostrarToast("Chamado excluído com sucesso!", "toast-aviso1");
             }
+            window.fecharPopupConfirmacao();
+        }
+    });
+}
 
-            document.getElementById("cancelamentocheckin").value = "";
-
-            popupCanCheckin.style.display = "none";
-            popupSucessoCancelamento.style.display = "flex";
-        });
-    }
-
-    if (btnFecharSucessoCancelamento) {
-        btnFecharSucessoCancelamento.addEventListener("click", function () {
-            popupSucessoCancelamento.style.display = "none";
-
-            if (typeof window.cancelarVeiculoInfo === "function") {
-                window.cancelarVeiculoInfo();
-            }
-        });
+// Fecha o pop-up se o usuário clicar no fundo escuro (fora do card de confirmação)
+window.addEventListener("click", function(event) {
+    if (event.target === popupConfirmacao) {
+        window.fecharPopupConfirmacao();
     }
 });

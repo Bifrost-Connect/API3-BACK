@@ -337,21 +337,33 @@ async function criarChamado(event) {
     }
 }
 
-window.excluirChamado = async function (id) {
-    if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
+window.excluirChamado = function (id) {
+    if (typeof window.abrirPopupConfirmacao === "function") {
+        window.abrirPopupConfirmacao(id);
+    } else {
+        window.executarExclusaoChamado(id);
+    }
+};
 
+window.executarExclusaoChamado = async function (id) {
     try {
-        const response = await window.apiFetch(`/chamado/${id}`, { method: "DELETE" });
+        const response = await window.apiFetch(`/service/${id}`, { method: "DELETE" });
         if (response && response.ok) {
             removerChamado(id);
-            window.mostrarToast("Chamado excluído com sucesso!", "toast-aviso1");
+            if (typeof window.fecharPopupConfirmacao === "function") window.fecharPopupConfirmacao();
+            const popupSuc = document.getElementById("popupSucesso");
+            if (popupSuc) popupSuc.style.display = "flex";
         } else {
             removerChamado(id);
-            window.mostrarToast("Excluído localmente com sucesso!", "toast-aviso1");
+            if (typeof window.fecharPopupConfirmacao === "function") window.fecharPopupConfirmacao();
+            const popupSuc = document.getElementById("popupSucesso");
+            if (popupSuc) popupSuc.style.display = "flex";
         }
     } catch (error) {
         removerChamado(id);
-        window.mostrarToast("Excluído localmente.", "toast-aviso1");
+        if (typeof window.fecharPopupConfirmacao === "function") window.fecharPopupConfirmacao();
+        const popupSuc = document.getElementById("popupSucesso");
+        if (popupSuc) popupSuc.style.display = "flex";
     }
 };
 

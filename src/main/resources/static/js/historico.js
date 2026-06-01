@@ -68,6 +68,10 @@ async function carregarPagina(page) {
 
         // Armazena os dados da página atual e os metadados de paginação
         chamadosHistorico = data.content || [];
+        
+        // Ordena decrescente por id (serviceId)
+        chamadosHistorico.sort((a, b) => (b.serviceId || 0) - (a.serviceId || 0));
+
         paginacaoAtual = {
             page:          data.page,
             size:          data.size,

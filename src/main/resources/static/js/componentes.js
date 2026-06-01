@@ -71,22 +71,22 @@ window.renderizarSidebarGestor = function () {
                 <a href="relatorios.html">RELATÓRIOS</a>
                 
                 <div class="sidebar-submenu-container">
-                    <button id="btn-cadastro" class="sidebar-item-expandavel" type="button" aria-expanded="false">
+                    <button class="sidebar-item-expandavel" type="button" aria-expanded="false">
                         <span class="sidebar-item-label">GERENCIAMENTO</span>
                         <span class="sidebar-item-icon">&#9662;</span>
                     </button>
-                    <div id="submenu-cadastro" class="sidebar-submenu">
+                    <div class="sidebar-submenu">
                         <a href="veiculos-gestor.html" class="submenu-item">Gerenciar veículos</a>
                         <a href="tecnicos-gestor.html" class="submenu-item">Gerenciar usuários</a>
                     </div>
                 </div>     
                 
                 <div class="sidebar-submenu-container">
-                    <button id="btn-cadastro" class="sidebar-item-expandavel" type="button" aria-expanded="false">
+                    <button class="sidebar-item-expandavel" type="button" aria-expanded="false">
                         <span class="sidebar-item-label">CADASTRO</span>
                         <span class="sidebar-item-icon">&#9662;</span>
                     </button>
-                    <div id="submenu-cadastro" class="sidebar-submenu">
+                    <div class="sidebar-submenu">
                         <a href="cadastroveiculos.html" class="submenu-item">Cadastrar veículos</a>
                         <a href="cadastrousuarios.html" class="submenu-item">Cadastrar usuários</a>
                     </div>
@@ -120,24 +120,29 @@ function marcarLinkAtivo(sidebar) {
 
     const paginaAtual = obterNomePaginaAtual();
     const links = sidebar.querySelectorAll("a[href]");
-    let isPaginaCadastro = false;
 
     links.forEach((link) => {
         const href = (link.getAttribute("href") || "").toLowerCase();
         const ativo = href === paginaAtual;
 
         link.classList.toggle("active", ativo);
-
-        if (ativo && (href === "cadastroveiculos.html" || href === "cadastrousuarios.html")) {
-            isPaginaCadastro = true;
-        }
     });
 
-    const btnCadastro = sidebar.querySelector("#btn-cadastro");
-    const submenuCadastro = sidebar.querySelector("#submenu-cadastro");
-    if (btnCadastro && submenuCadastro) {
-        atualizarEstadoCadastro(btnCadastro, submenuCadastro, isPaginaCadastro);
-    }
+    const submenus = sidebar.querySelectorAll(".sidebar-submenu-container");
+    submenus.forEach((container) => {
+        const btn = container.querySelector(".sidebar-item-expandavel");
+        const submenu = container.querySelector(".sidebar-submenu");
+        if (btn && submenu) {
+            const linksSubmenu = submenu.querySelectorAll("a[href]");
+            let contemAtivo = false;
+            linksSubmenu.forEach((link) => {
+                if (link.classList.contains("active")) {
+                    contemAtivo = true;
+                }
+            });
+            atualizarEstadoCadastro(btn, submenu, contemAtivo);
+        }
+    });
 }
 
 // ===================================================================
@@ -153,9 +158,6 @@ window.inicializarComponentes = function () {
 
     const btnMenu = topbarContainer ? topbarContainer.querySelector("#btnmenu") : null;
     const btnX = sidebar ? sidebar.querySelector("#btnx") : null;
-
-    const btnCadastro = sidebar ? sidebar.querySelector("#btn-cadastro") : null;
-    const submenuCadastro = sidebar ? sidebar.querySelector("#submenu-cadastro") : null;
 
     if (!sidebar || sidebar.dataset.initialized === "true") {
         if (sidebar) marcarLinkAtivo(sidebar);
@@ -180,12 +182,17 @@ window.inicializarComponentes = function () {
         if (event.key === "Escape") fecharSidebar();
     });
 
-    if (btnCadastro && submenuCadastro) {
-        btnCadastro.addEventListener("click", () => {
-            const expandido = !submenuCadastro.classList.contains("active");
-            atualizarEstadoCadastro(btnCadastro, submenuCadastro, expandido);
-        });
-    }
+    const submenus = sidebar.querySelectorAll(".sidebar-submenu-container");
+    submenus.forEach((container) => {
+        const btn = container.querySelector(".sidebar-item-expandavel");
+        const submenu = container.querySelector(".sidebar-submenu");
+        if (btn && submenu) {
+            btn.addEventListener("click", () => {
+                const expandido = !submenu.classList.contains("active");
+                atualizarEstadoCadastro(btn, submenu, expandido);
+            });
+        }
+    });
 
     sidebar.dataset.initialized = "true";
 

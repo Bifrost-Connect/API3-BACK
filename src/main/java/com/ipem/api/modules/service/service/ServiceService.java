@@ -46,6 +46,7 @@ public class ServiceService {
     private final UserRepository userRepository;
     private final RecordRepository recordRepository;
     private final RefuelingRepository refuelingRepository;
+    private final com.ipem.api.modules.service.repository.IncidentRepository incidentRepository;
     private final EntityManager entityManager;
 
     /**
@@ -57,6 +58,7 @@ public class ServiceService {
                           UserRepository userRepository, 
                           RecordRepository recordRepository,
                           RefuelingRepository refuelingRepository, 
+                          com.ipem.api.modules.service.repository.IncidentRepository incidentRepository,
                           EntityManager entityManager) {
         this.serviceRepository = serviceRepository;
         this.serviceAddressesRepository = serviceAddressesRepository;
@@ -64,6 +66,7 @@ public class ServiceService {
         this.userRepository = userRepository;
         this.recordRepository = recordRepository;
         this.refuelingRepository = refuelingRepository;
+        this.incidentRepository = incidentRepository;
         this.entityManager = entityManager;
     }
 
@@ -366,4 +369,73 @@ public class ServiceService {
         }).toList();
     }
 
+    @Transactional
+    public void deleteService(Long id) {
+        serviceAddressesRepository.findByServiceId(id).forEach(serviceAddressesRepository::delete);
+        serviceRepository.deleteById(id);
+    }
+
+    // ===================================================================
+    // OCORRÊNCIAS / INCIDENTES
+    // ===================================================================
+
+
+    /**
+     * REGISTRAR OCORRÊNCIA (Defeito ou outro incidente durante o serviço)
+     * Cria um Incident vinculado ao serviço ativo sem cancelá-lo.
+     */
+    @Transactional
+    public com.ipem.api.modules.service.model.Incident registerIncident(
+            Long serviceId, String description, String incidentType, String severity, Boolean requestSupport) {
+
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado."));
+
+        com.ipem.api.modules.service.model.Incident incident = com.ipem.api.modules.service.model.Incident.builder()
+                .service(service)
+                .incidentType(com.ipem.api.modules.service.model.enums.IncidentType.valueOf(incidentType))
+                .severity(com.ipem.api.modules.service.model.enums.Severity.valueOf(severity))
+                .description(description)
+                .requestSupport(requestSupport)
+                .isActive(true)
+                .resolved(false)
+                .build();
+
+        // Registra também na linha do tempo do serviço (Record)
+        Record record = new Record();
+        record.setService(service);
+        record.setRecordType(RecordType.INCIDENT);
+        record.setRecordDate(LocalDateTime.now());
+        record.setRecordKm(service.getCar() != null ? service.getCar().getCurrentKm() : 0f);
+        record.setNote("Ocorrência: " + description);
+        recordRepository.save(record);
+
+        return incidentRepository.save(incident);
+    }
+
+    /**
+     * CANCELAR SERVIÇO (Pós check-in)
+     * Registra um incidente do tipo CANCELLATION, encerra o serviço e libera o veículo.
+     */
+    @Transactional
+    public void cancelService(Long serviceId, String motivo) {
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado."));
+
+        // 1. Registra a ocorrência de cancelamento
+        registerIncident(serviceId, motivo, "CANCELLATION", "MEDIUM", false);
+
+        // 2. Encerra o serviço
+        service.setCompletionTime(LocalDateTime.now());
+        service.setIsActive(false);
+        serviceRepository.save(service);
+
+        // 3. Libera o veículo
+        if (service.getCar() != null) {
+            var car = service.getCar();
+            car.setVehicleStatus(VehicleStatus.AVAILABLE);
+            car.setAvailable(true);
+            carRepository.save(car);
+        }
+    }
 }
