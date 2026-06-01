@@ -271,7 +271,7 @@
 
     <div id="sidebar-container"></div>
 
-    <button id="btn-informacoes-uteis" class="btn-flutuante" type="button" onclick="abrirPopupContatos()" aria-label="Contatos úteis">📞</button>
+    <button id="btn-informacoes-uteis" class="btn-flutuante" type="button" onclick="abrirPopupContatos(event)" aria-label="Contatos úteis">📞</button>
 
     <div id="popupContatos" class="popup">
         <div class="popup-content">
@@ -320,7 +320,8 @@
     <script>
         injetarLayout("Tela Inicial");
 
-        function abrirPopupContatos() {
+        function abrirPopupContatos(event) {
+            if (event) event.stopPropagation();
             const popup = document.getElementById("popupContatos");
             if (popup) popup.style.display = "flex";
         }

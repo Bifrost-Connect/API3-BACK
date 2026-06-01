@@ -6,59 +6,6 @@ let customDateReport = null; // Guarda o relatório gerado por data customizada
 
 const categoriasRelatorio = ["Chamados", "Abastecimento", "Ocorrências"];
 
-const relatoriosSample = [
-    {
-        monthLabel: "Abril",
-        year: 2026,
-        status: "Relatório parcial",
-        totalCalls: 42,
-        completedCalls: 28,
-        openCalls: 14,
-        isCurrentMonth: true,
-        entries: [
-            {
-                id: 7345,
-                carPrefix: "Ford Ka | 1234",
-                userName: "Ana Paula",
-                description: "Verificação de bomba de combustível",
-                departureTime: "20/04/2026 08:10",
-                completionTime: "20/04/2026 10:00",
-                status: "Aberto"
-            },
-            {
-                id: 7343,
-                carPrefix: "Fiat Mobi | 9012",
-                userName: "Bruno Lima",
-                description: "Manutenção preventiva de radar",
-                departureTime: "17/04/2026 15:05",
-                completionTime: "17/04/2026 16:40",
-                status: "Finalizado"
-            },
-            {
-                id: 7341,
-                carPrefix: "Toyota Hilux | 7890",
-                userName: "Juliana Costa",
-                description: "Verificação de cronotacógrafos",
-                departureTime: "20/04/2026 07:40",
-                completionTime: "--",
-                status: "Em andamento"
-            }
-        ],
-        gastos: [
-            { id: 1, type: "Combustível", vehicle: "Fiat Mobi | 9012", amount: "R$ 1.340,50", date: "17/04/2026", description: "Abastecimento e troca de óleo" },
-            { id: 2, type: "Peças", vehicle: "Ford Ka | 1234", amount: "R$ 520,00", date: "20/04/2026", description: "Substituição de pastilhas de freio" }
-        ],
-        abastecimentos: [
-            { id: 1, vehicle: "Fiat Mobi | 9012", driver: "Bruno Lima", liters: "35 L", cost: "R$ 220,00", date: "17/04/2026" },
-            { id: 2, vehicle: "Toyota Hilux | 7890", driver: "Juliana Costa", liters: "50 L", cost: "R$ 310,00", date: "15/04/2026" }
-        ],
-        ocorrencias: [
-            { id: 1, vehicle: "Ford Ka | 1234", technician: "Ana Paula", occurrence: "Avaria no sensor de velocidade", date: "12/04/2026", status: "Aberto" },
-            { id: 2, vehicle: "Fiat Mobi | 9012", technician: "Bruno Lima", occurrence: "Troca de pneu emergencial", date: "08/04/2026", status: "Finalizado" }
-        ]
-    }
-];
-
 window.addEventListener("DOMContentLoaded", () => {
     if (typeof carregarDadosTelaInicial === "function") carregarDadosTelaInicial();
     configurarRelatorios();
@@ -70,7 +17,7 @@ async function carregarRelatorioAnoVigente() {
     ontem.setDate(ontem.getDate() - 1);
     const year = ontem.getFullYear();
     const pad = n => String(n).padStart(2, '0');
-    
+
     const inicio = `${year}-01-01`;
     const fim = `${year}-${pad(ontem.getMonth() + 1)}-${pad(ontem.getDate())}`;
 
@@ -84,11 +31,11 @@ async function carregarRelatorioAnoVigente() {
 
     selectedDateRange = { from: inicio, to: fim };
 
-    // Inicializa as categorias (caso precise)
+    // Inicializa as categorias
     if (document.getElementById("categorias-list")) {
         renderizarCategorias();
     }
-    
+
     await buscarDadosParaCategoria(inicio, fim);
 }
 
@@ -112,13 +59,13 @@ async function carregarRelatoriosDaAPI() {
             inicializarRelatorios();
         } else {
             console.error("Erro ao buscar relatórios. Status:", response.status);
-            relatoriosDoBanco = relatoriosSample;
+            relatoriosDoBanco = [];
             inicializarRelatorios();
             mostrarErroNaTabela("Falha ao carregar os dados do servidor.");
         }
     } catch (error) {
         console.error("Erro de conexão com a API:", error);
-        relatoriosDoBanco = relatoriosSample;
+        relatoriosDoBanco = [];
         inicializarRelatorios();
         mostrarErroNaTabela("Erro de conexão. Verifique se o back-end está rodando.");
     }
@@ -126,11 +73,6 @@ async function carregarRelatoriosDaAPI() {
 
 function inicializarRelatorios() {
     if (!document.getElementById("categorias-list")) return;
-
-    if (relatoriosDoBanco.length === 0) {
-        relatoriosDoBanco = relatoriosSample;
-    }
-
     renderizarCategorias();
     selecionarRelatorio(0);
 }
@@ -166,16 +108,16 @@ function obterNomeRecursoDeExportacao() {
 
 async function buscarDadosParaCategoria(inicio, fim) {
     if (!inicio || !fim) return;
-    
+
     const endpoint = obterEndpointDaCategoria();
     window.mostrarToast(`Buscando ${selectedCategoria.toLowerCase()}...`, "toast-aviso1");
-    
+
     try {
         const response = await window.apiFetch(`${endpoint}?startDate=${inicio}&endDate=${fim}`, { method: "GET" });
         if (response && response.ok) {
             const data = await response.json();
             const entries = data.entries || [];
-            
+
             customDateReport = {
                 month: `Período Personalizado`,
                 totalCalls: entries.length,
@@ -185,7 +127,7 @@ async function buscarDadosParaCategoria(inicio, fim) {
                 status: `Filtro: ${formatDate(inicio)} a ${formatDate(fim)}`,
                 entries: entries
             };
-            
+
             atualizarStatusEResumo();
             atualizarConteudo();
         } else {
@@ -200,7 +142,7 @@ async function buscarDadosParaCategoria(inicio, fim) {
 async function selecionarCategoria(categoria) {
     selectedCategoria = categoria;
     renderizarCategorias();
-    
+
     if (selectedDateRange.from && selectedDateRange.to) {
         await buscarDadosParaCategoria(selectedDateRange.from, selectedDateRange.to);
     } else {
@@ -210,10 +152,12 @@ async function selecionarCategoria(categoria) {
 
 function selecionarRelatorio(index) {
     selectedReportIndex = index;
-    if (selectedReportIndex >= relatoriosDoBanco.length) selectedReportIndex = 0;
-    
-    selectedDateRange = { from: null, to: null }; // Limpa qualquer filtro de data ao clicar em um mês
-    customDateReport = null; // Limpa relatório customizado
+    if (relatoriosDoBanco.length > 0 && selectedReportIndex >= relatoriosDoBanco.length) {
+        selectedReportIndex = 0;
+    }
+
+    selectedDateRange = { from: null, to: null };
+    customDateReport = null;
 
     document.querySelectorAll(".periodo-item").forEach(el => el.classList.remove("active"));
     const selectedEl = document.querySelector(`.periodo-item[data-index="${index}"]`);
@@ -225,7 +169,6 @@ function selecionarRelatorio(index) {
 }
 
 function mostrarStatus(text) {
-    // Seleciona o primeiro 'strong' dentro do primeiro 'article' dos KPIs
     const statusElement = document.querySelector(".relatorios-kpis article:nth-child(1) strong");
     if (statusElement) statusElement.textContent = text;
 }
@@ -233,24 +176,24 @@ function mostrarStatus(text) {
 function atualizarResumo(total, completed, open) {
     const kpis = document.querySelectorAll(".relatorios-kpis article strong");
     if (kpis.length >= 4) {
-        kpis[1].textContent = total;
-        kpis[2].textContent = completed;
-        kpis[3].textContent = open;
+        kpis[1].textContent = total || 0;
+        kpis[2].textContent = completed || 0;
+        kpis[3].textContent = open || 0;
     }
 }
 
 function atualizarTabela(entries) {
-    const tbody = document.querySelector(".relatorios-table tbody");
+    const tbody = document.querySelector(".relatorios-table tbody") || document.querySelector(".tecnicos-table tbody");
     if (!tbody) return;
 
     tbody.innerHTML = "";
 
     if (!entries || entries.length === 0) {
-        mostrarErroNaTabela(`Nenhum registro de ${selectedCategoria.toLowerCase()} disponível.`);
+        mostrarErroNaTabela(`Nenhum registro de ${selectedCategoria.toLowerCase()} disponível para este período.`);
         return;
     }
 
-    const headerRow = document.querySelector(".relatorios-table thead tr");
+    const headerRow = document.querySelector(".relatorios-table thead tr") || document.querySelector(".tecnicos-table thead tr");
     if (headerRow) headerRow.innerHTML = cabecalhoPorCategoria();
 
     entries.forEach(entry => {
@@ -261,8 +204,14 @@ function atualizarTabela(entries) {
 }
 
 function atualizarStatusEResumo() {
-    const report = customDateReport || relatoriosDoBanco[selectedReportIndex] || relatoriosSample[0];
-    mostrarStatus(report.status);
+    const report = customDateReport || relatoriosDoBanco[selectedReportIndex];
+    if (!report) {
+        mostrarStatus("Nenhum dado disponível");
+        atualizarResumo(0, 0, 0);
+        return;
+    }
+
+    mostrarStatus(report.status || "-");
     atualizarResumo(report.totalCalls, report.completedCalls, report.openCalls);
     atualizarBotaoGerar(report);
 }
@@ -284,15 +233,11 @@ function isRelatorioParcial(report) {
         return Number(report.month) === now.getMonth() + 1 && Number(report.year) === now.getFullYear();
     }
 
-    if (report.monthLabel && report.year) {
-        return report.monthLabel.toLowerCase().includes("abril") && now.getMonth() + 1 === 4 && now.getFullYear() === report.year;
-    }
-
     return false;
 }
 
 function atualizarConteudo() {
-    const report = customDateReport || relatoriosDoBanco[selectedReportIndex] || relatoriosSample[0];
+    const report = customDateReport || relatoriosDoBanco[selectedReportIndex];
     atualizarBannerPeriodo(report);
     const dados = obterDadosPorCategoria(report);
     atualizarTabela(dados);
@@ -307,7 +252,7 @@ function atualizarBannerPeriodo(report) {
         return;
     }
 
-    if (report.monthLabel && report.year) {
+    if (report && report.monthLabel && report.year) {
         label.textContent = `Período atual: ${report.monthLabel} ${report.year}`;
         return;
     }
@@ -317,8 +262,7 @@ function atualizarBannerPeriodo(report) {
 
 function obterDadosPorCategoria(report) {
     if (!report) return [];
-    
-    // For custom date reports fetched from our new endpoints, all data comes in 'entries'
+
     if (report.month === "Período Personalizado") {
         return report.entries || [];
     }
@@ -399,14 +343,14 @@ function abrirEscolherDatas() {
     const popup = document.getElementById("popupRelatorioDatas");
     const inputInicio = document.getElementById("relatorio-data-inicio");
     const inputFim = document.getElementById("relatorio-data-fim");
-    
+
     if (inputInicio && inputFim && !inputInicio.value && !inputFim.value) {
         const ontem = new Date();
         ontem.setDate(ontem.getDate() - 1);
-        
+
         const year = ontem.getFullYear();
         const pad = n => String(n).padStart(2, '0');
-        
+
         inputInicio.value = `${year}-01-01`;
         inputFim.value = `${year}-${pad(ontem.getMonth() + 1)}-${pad(ontem.getDate())}`;
     }
@@ -432,7 +376,7 @@ async function confirmarPeriodoRelatorio() {
     fecharEscolherDatas();
     window.mostrarToast(`Buscando relatórios de ${formatDate(inicio)} até ${formatDate(fim)}...`, "toast-aviso1");
 
-        await buscarDadosParaCategoria(inicio, fim);
+    await buscarDadosParaCategoria(inicio, fim);
 }
 
 function formatDate(dateString) {
@@ -454,8 +398,7 @@ function gerarRelatorio() {
 window.executarExportacao = async function () {
     const nomeArquivo = document.getElementById("export-filename").value.trim() || "Relatorio";
     const formato = document.querySelector('input[name="exportFormat"]:checked').value;
-    
-    // Verifies if custom dates are selected
+
     if (customDateReport && selectedDateRange.from && selectedDateRange.to) {
         try {
             const recursoExportacao = obterNomeRecursoDeExportacao();
@@ -466,22 +409,21 @@ window.executarExportacao = async function () {
             window.mostrarToast("Erro ao exportar arquivo.", "toast-aviso");
         }
     } else {
-        const report = relatoriosDoBanco[selectedReportIndex] || relatoriosSample[0];
-        
-        // Mapeia o mês para calcular início e fim e exportar corretamente a lista de chamados
+        const report = relatoriosDoBanco[selectedReportIndex];
+
         const mapMeses = { "janeiro": 1, "fevereiro": 2, "março": 3, "abril": 4, "maio": 5, "junho": 6, "julho": 7, "agosto": 8, "setembro": 9, "outubro": 10, "novembro": 11, "dezembro": 12 };
-        
+
         let monthNum = new Date().getMonth() + 1;
         let yearNum = new Date().getFullYear();
-        
+
         if (report && report.monthLabel) {
             monthNum = mapMeses[report.monthLabel.toLowerCase()] || monthNum;
             yearNum = report.year || yearNum;
         }
-        
+
         const pad = (n) => String(n).padStart(2, '0');
         const lastDay = new Date(yearNum, monthNum, 0).getDate();
-        
+
         const startDate = `${yearNum}-${pad(monthNum)}-01`;
         const endDate = `${yearNum}-${pad(monthNum)}-${pad(lastDay)}`;
 
@@ -496,8 +438,9 @@ window.executarExportacao = async function () {
     }
     fecharExport();
 };
+
 function mostrarErroNaTabela(mensagem) {
-    const tbody = document.querySelector(".relatorios-table tbody");
+    const tbody = document.querySelector(".relatorios-table tbody") || document.querySelector(".tecnicos-table tbody");
     if (tbody) {
         const colspan = selectedCategoria === "Chamados" ? 7 : 6;
         tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#67717b; padding:28px 0;">${mensagem}</td></tr>`;

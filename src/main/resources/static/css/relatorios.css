@@ -1,3 +1,6 @@
+/* ===================================================================
+   1. RESET & BASE
+   =================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -10,6 +13,9 @@ body.pagina-relatorios {
     min-height: 100vh;
 }
 
+/* ===================================================================
+   2. TOP BAR & SIDEBAR (Caso não estejam em componentes.css)
+   =================================================================== */
 .top-bar {
     width: 95%;
     max-width: 1180px;
@@ -55,202 +61,6 @@ body.pagina-relatorios {
     background-color: #0d36b1;
     box-shadow: 0 0 20px #073ad4;
     transform: scale(1.1);
-}
-
-.relatorios-container {
-    width: 95%;
-    max-width: 1180px;
-    margin: 20px auto 40px auto;
-    display: grid;
-    gap: 20px;
-}
-
-.relatorios-dashboard,
-.relatorios-panel {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 0 14px rgba(0, 0, 0, 0.12);
-    padding: 24px;
-}
-
-.relatorios-dashboard-topo h1,
-.relatorios-panel-topo h2 {
-    font-size: 28px;
-    margin-bottom: 8px;
-}
-
-.relatorios-dashboard-topo p,
-.relatorios-panel-topo p {
-    color: #67717b;
-    line-height: 1.6;
-}
-
-.relatorios-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
-}
-
-.relatorios-kpi {
-    background: #f7f9fc;
-    border-radius: 18px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.relatorios-kpi span {
-    display: block;
-    color: #67717b;
-    margin-bottom: 10px;
-}
-
-.relatorios-kpi strong {
-    display: block;
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-    color: #002080;
-}
-
-.relatorios-kpi small {
-    color: #67717b;
-}
-
-.relatorios-panel-topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 22px;
-}
-
-.btn-gerar {
-    padding: 14px 22px;
-    border: none;
-    border-radius: 50px;
-    background-color: #002080;
-    color: #ffffff;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.relatorios-panel-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: flex-end;
-    align-items: center;
-    margin-top: 18px;
-}
-
-#btn-escolher-datas,
-.btn-datas {
-    border-radius: 50px;
-    border: 1px solid rgba(27, 75, 215, 0.22);
-    background: #eef3ff;
-    color: #1b4bd7;
-    padding: 14px 22px;
-    cursor: pointer;
-}
-
-.relatorios-periodo-info {
-    margin-top: 20px;
-    padding: 16px 20px;
-    border-radius: 18px;
-    background: #f5f7ff;
-    color: #22335c;
-    font-weight: 600;
-}
-
-.categoria-btn {
-    border: 1px solid rgba(27, 75, 215, 0.18);
-    border-radius: 16px;
-    padding: 14px 18px;
-    background: #fff;
-    color: #1b4bd7;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.categoria-btn.active,
-.categoria-btn:hover {
-    background: #e5edff;
-    transform: translateY(-1px);
-}
-
-.relatorios-periodos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.periodo {
-    padding: 12px 18px;
-    border-radius: 14px;
-    border: 1px solid #dbe4f3;
-    background: #f7f9fc;
-    color: #002080;
-    cursor: pointer;
-}
-
-.periodo.active,
-.periodo:hover {
-    background: #002080;
-    color: #ffffff;
-    border-color: #002080;
-}
-
-.relatorios-table-wrapper {
-    overflow-x: auto;
-}
-
-.relatorios-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 860px;
-}
-
-.relatorios-table th,
-.relatorios-table td {
-    padding: 16px 18px;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
-    color: #1f2d3d;
-    font-size: 0.95rem;
-}
-
-.relatorios-table th {
-    background: #f4f6fb;
-    color: #67717b;
-    font-weight: 700;
-}
-
-.relatorios-table tr:last-child td {
-    border-bottom: none;
-}
-
-.status-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.status-indicar {
-    background: #ff8c00;
-}
-
-.status-andamento {
-    background: #0055c5;
-}
-
-.status-finalizado {
-    background: #00875a;
 }
 
 .sidebar {
@@ -312,32 +122,395 @@ body.pagina-relatorios {
     cursor: pointer;
 }
 
-#toast-aviso {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #ff4d4d; /* Vermelho para erro */
-    color: white;
-    padding: 12px 25px;
-    border-radius: 8px;
-    z-index: 3000;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: opacity 0.3s, top 0.3s;
+/* ===================================================================
+   3. LAYOUT PRINCIPAL & PAINÉIS
+   =================================================================== */
+.relatorios-container {
+    width: 95%;
+    max-width: 1180px;
+    margin: 20px auto 40px auto;
+    display: grid;
+    gap: 20px;
 }
 
-.toast-hidden {
+.relatorios-dashboard,
+.relatorios-panel {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 0 14px rgba(0, 0, 0, 0.12);
+    padding: 24px;
+}
+
+.relatorios-dashboard-topo h1,
+.relatorios-panel-topo h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.relatorios-dashboard-topo p,
+.relatorios-panel-topo p {
+    color: #67717b;
+    line-height: 1.6;
+}
+
+.relatorios-panel-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+/* ===================================================================
+   4. KPIs
+   =================================================================== */
+.relatorios-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.relatorios-kpi {
+    background: #f7f9fc;
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.relatorios-kpi span {
+    display: block;
+    color: #67717b;
+    margin-bottom: 10px;
+}
+
+.relatorios-kpi strong {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: #002080;
+}
+
+.relatorios-kpi small {
+    color: #67717b;
+}
+
+/* ===================================================================
+   5. BOTÕES, AÇÕES E FILTROS
+   =================================================================== */
+.btn-gerar {
+    padding: 14px 22px;
+    border: none;
+    border-radius: 50px;
+    background-color: #002080;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.relatorios-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 18px;
+}
+
+#btn-escolher-datas,
+.btn-datas {
+    border-radius: 50px;
+    border: 1px solid rgba(27, 75, 215, 0.22);
+    background: #eef3ff;
+    color: #1b4bd7;
+    padding: 14px 22px;
+    cursor: pointer;
+}
+
+.categoria-btn {
+    border: 1px solid rgba(27, 75, 215, 0.18);
+    border-radius: 16px;
+    padding: 14px 18px;
+    background: #fff;
+    color: #1b4bd7;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.categoria-btn.active,
+.categoria-btn:hover {
+    background: #e5edff;
+    transform: translateY(-1px);
+}
+
+.relatorios-periodo-info {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    background: #f5f7ff;
+    color: #22335c;
+    font-weight: 600;
+}
+
+.relatorios-periodos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.periodo {
+    padding: 12px 18px;
+    border-radius: 14px;
+    border: 1px solid #dbe4f3;
+    background: #f7f9fc;
+    color: #002080;
+    cursor: pointer;
+}
+
+.periodo.active,
+.periodo:hover {
+    background: #002080;
+    color: #ffffff;
+    border-color: #002080;
+}
+
+/* ===================================================================
+   6. TABELAS & STATUS
+   =================================================================== */
+.relatorios-table-wrapper {
+    overflow-x: auto;
+}
+
+.relatorios-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 860px;
+}
+
+.relatorios-table th,
+.relatorios-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    color: #1f2d3d;
+    font-size: 0.95rem;
+}
+
+.relatorios-table th {
+    background: #f4f6fb;
+    color: #67717b;
+    font-weight: 700;
+}
+
+.relatorios-table tr:last-child td {
+    border-bottom: none;
+}
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.status-indicar {
+    background: #ff8c00;
+}
+
+.status-andamento {
+    background: #0055c5;
+}
+
+.status-finalizado {
+    background: #00875a;
+}
+
+/* ===================================================================
+   7. POPUPS & EXPORTAÇÃO
+   =================================================================== */
+.popup-relatorio-datas,
+.popup-export {
     display: none;
-    opacity: 0;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1500;
+    backdrop-filter: blur(2px);
 }
 
+.popup-relatorio-datas .popup-card,
+.popup-export .popup-card {
+    background-color: #ffffff;
+    border-radius: 22px;
+    padding: 26px;
+    box-shadow: 0 24px 48px rgba(1, 19, 70, 0.22);
+    width: min(92%, 520px);
+}
+
+/* Fix para manter os inputs de data alinhados no grid */
+.popup-conteudo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    margin-bottom: 0;
+}
+
+.input-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3b4b68;
+    position: static !important; /* Remove conflitos de float labels globais */
+    transform: none !important;
+    display: block;
+    text-align: left;
+}
+
+.input-group input.input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 32, 128, 0.12);
+    border-radius: 14px;
+    background: #fbfcff;
+    color: #102030;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-group input.input:focus {
+    outline: none;
+    border-color: rgba(0, 32, 128, 0.38);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 54, 177, 0.08);
+}
+
+.popup-actions,
+.export-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-acao-filtrar,
+.btn-acao-exportar {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #002080 0%, #0d36b1 100%);
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(13, 54, 177, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+}
+
+.btn-acao-filtrar:hover,
+.btn-acao-exportar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 20px rgba(13, 54, 177, 0.24);
+}
+
+.btn-limpar-filtro {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 14px;
+    background: #e7ebf5;
+    color: #3b4b68;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: center;
+}
+
+.btn-limpar-filtro:hover {
+    background: #d8deed;
+}
+
+.export-format-section {
+    margin-top: 18px;
+    margin-bottom: 20px;
+}
+
+.export-format-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3b4b68;
+    margin-bottom: 12px;
+}
+
+.export-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+
+.export-option {
+    cursor: pointer;
+}
+
+.export-option input[type="radio"] {
+    display: none;
+}
+
+.export-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    border: 1px solid rgba(0, 32, 128, 0.12);
+    border-radius: 14px;
+    background: #fbfcff;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a5a80;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.export-option input[type="radio"]:checked + .export-box {
+    background: #eef3ff;
+    border-color: #002080;
+    color: #002080;
+    box-shadow: 0 8px 16px rgba(13, 54, 177, 0.08);
+}
+
+.export-box:hover {
+    background: #f4f7ff;
+    transform: translateY(-1px);
+}
+
+.export-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+/* ===================================================================
+   8. TOASTS
+   =================================================================== */
+#toast-aviso,
 #toast-aviso1 {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #28a745;
     color: white;
     padding: 12px 25px;
     border-radius: 8px;
@@ -347,11 +520,23 @@ body.pagina-relatorios {
     transition: opacity 0.3s, top 0.3s;
 }
 
+#toast-aviso {
+    background-color: #ff4d4d; /* Vermelho para erro */
+}
+
+#toast-aviso1 {
+    background-color: #28a745; /* Verde para sucesso */
+}
+
+.toast-hidden,
 .toast-hidden1 {
     display: none;
     opacity: 0;
 }
 
+/* ===================================================================
+   9. MEDIA QUERIES (Responsividade)
+   =================================================================== */
 @media (max-width: 980px) {
     .relatorios-container {
         width: 100%;
@@ -361,6 +546,18 @@ body.pagina-relatorios {
     .relatorios-panel-topo {
         flex-direction: column;
         align-items: stretch;
+        gap: 14px;
+    }
+
+    .relatorios-panel-actions {
+        width: 100%;
+        justify-content: stretch;
+        margin-top: 8px;
+    }
+
+    .relatorios-panel-actions button {
+        flex: 1;
+        text-align: center;
     }
 
     .btn-gerar {
@@ -395,5 +592,20 @@ body.pagina-relatorios {
 
     .relatorios-table {
         min-width: 680px;
+    }
+
+    .popup-conteudo {
+        grid-template-columns: 1fr; /* Inputs de data um embaixo do outro no mobile */
+        gap: 12px;
+    }
+
+    .popup-actions,
+    .export-actions {
+        flex-direction: column;
+    }
+
+    .popup-actions button,
+    .export-actions button {
+        width: 100%;
     }
 }

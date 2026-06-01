@@ -93,24 +93,18 @@ body.pagina-mapa-gestor {
 }
 
 .painel-lateral {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    min-height: 0;
     align-self: start;
     position: sticky;
     top: calc(var(--topbar-height) + (var(--topbar-offset) * 2) + 6px);
-    max-height: calc(100vh - (var(--topbar-height) + (var(--topbar-offset) * 2) + 24px));
 }
 
 .card-formulario,
 .card-lista {
     border-radius: 22px;
     padding: 20px;
-}
-
-.card-formulario {
-    flex: 0 0 auto;
 }
 
 .titulo-formulario,
@@ -269,6 +263,7 @@ body.pagina-mapa-gestor {
 
 .card-lista {
     min-height: 280px;
+    max-height: 420px;
     min-width: 0;
     overflow-y: auto;
 }

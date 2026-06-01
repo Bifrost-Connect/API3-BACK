@@ -23,7 +23,7 @@ body {
     width: min(calc(100% - 32px), 1180px);
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: 14px;
     margin-top: 12px;
     align-items: stretch;
