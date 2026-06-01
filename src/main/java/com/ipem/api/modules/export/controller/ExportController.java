@@ -91,4 +91,51 @@ public class ExportController {
         byte[] file = exportService.exportData(format, data);
         return buildResponse(file, format, fileName);
     }
+
+    /**
+     * Endpoint para exportar os relatórios por período (data inicial e data final).
+     */
+    @GetMapping("/{format}/reports-by-date/{fileName}")
+    public ResponseEntity<byte[]> downloadReportsByDate(@PathVariable String format, @PathVariable String fileName, @RequestParam String startDate, @RequestParam String endDate) {
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.LocalDateTime start = java.time.LocalDate.parse(startDate, formatter).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.parse(endDate, formatter).atTime(java.time.LocalTime.MAX);
+        
+        List<?> data = dashboardService.getServiceReportsByDateRange(start, end);
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
+
+    @GetMapping("/{format}/supplies-by-date/{fileName}")
+    public ResponseEntity<byte[]> downloadSuppliesByDate(@PathVariable String format, @PathVariable String fileName, @RequestParam String startDate, @RequestParam String endDate) {
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.LocalDateTime start = java.time.LocalDate.parse(startDate, formatter).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.parse(endDate, formatter).atTime(java.time.LocalTime.MAX);
+        
+        List<?> data = dashboardService.getRefuelingReportsByDateRange(start, end);
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
+
+    @GetMapping("/{format}/incidents-by-date/{fileName}")
+    public ResponseEntity<byte[]> downloadIncidentsByDate(@PathVariable String format, @PathVariable String fileName, @RequestParam String startDate, @RequestParam String endDate) {
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.LocalDateTime start = java.time.LocalDate.parse(startDate, formatter).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.parse(endDate, formatter).atTime(java.time.LocalTime.MAX);
+        
+        List<?> data = dashboardService.getIncidentReportsByDateRange(start, end);
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
+
+    @GetMapping("/{format}/expenses-by-date/{fileName}")
+    public ResponseEntity<byte[]> downloadExpensesByDate(@PathVariable String format, @PathVariable String fileName, @RequestParam String startDate, @RequestParam String endDate) {
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.LocalDateTime start = java.time.LocalDate.parse(startDate, formatter).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.parse(endDate, formatter).atTime(java.time.LocalTime.MAX);
+        
+        List<?> data = dashboardService.getExpenseReportsByDateRange(start, end);
+        byte[] file = exportService.exportData(format, data);
+        return buildResponse(file, format, fileName);
+    }
 }

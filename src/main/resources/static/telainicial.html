@@ -73,12 +73,7 @@
         </div>
 
         <div class="quadro-direito">
-            <h3>Chamado Atual</h3>
-            <div id="info-chamado">
-                <p>Nenhum chamado ativo.</p>
-            </div>
-            
-            <h3 style="margin-top: 30px;">Chamados Disponíveis</h3>
+            <h3>Chamados Disponíveis</h3>
             <div id="lista-chamados-container">
                 <p style="text-align: center; color: #666;">Buscando chamados disponíveis...</p>
             </div>
@@ -106,12 +101,24 @@
             <h2 class="popup-titulo">Filtros</h2>
 
             <div class="grupo-filtro">
-                <label for="filtroPrioridade">Prioridade</label>
-                <select id="filtroPrioridade">
-                    <option value="TODOS">Todas as prioridades</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Média">Média</option>
-                    <option value="Baixa">Baixa</option>
+                <label for="filtroTipo">Tipo de Veículo</label>
+                <select id="filtroTipo">
+                    <option value="TODOS">Todos os tipos</option>
+                    <option value="PASSEIO">Passeio</option>
+                    <option value="UTILITÁRIO">Utilitário</option>
+                </select>
+            </div>
+            
+            <div class="grupo-filtro">
+                <label for="filtroMarca">Marca</label>
+                <select id="filtroMarca">
+                    <option value="TODOS">Todas as marcas</option>
+                    <option value="CHEVROLET">Chevrolet</option>
+                    <option value="VOLKSWAGEN">Volkswagen</option>
+                    <option value="FIAT">Fiat</option>
+                    <option value="TOYOTA">Toyota</option>
+                    <option value="HONDA">Honda</option>
+                    <option value="RENAULT">Renault</option>
                 </select>
             </div>
 
@@ -292,6 +299,17 @@
 
     <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
     <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+
+    <div id="modalDetalheChamado" class="sobreposicao" style="display: none;">
+        <div class="popup-card">
+            <button class="popup-close" onclick="fecharModalDetalhes()">&times;</button>
+            <h2 class="popup-titulo" id="modalTitulo">Detalhes do Chamado</h2>
+            <div class="popup-conteudo" id="modalConteudo"></div>
+            <div class="popup-buttons">
+                <button class="btn-voltar" onclick="fecharModalDetalhes()">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/basic.js"></script>
     <script src="js/componentes.js"></script>

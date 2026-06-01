@@ -101,13 +101,13 @@ async function carregarVeiculos() {
         if (response && response.ok) {
             const data = await response.json();
             veiculosAtuais = data.map(v => ({
-                id: v.id,
-                model: v.model,
-                brand: v.brand,
-                type: v.type,
+                id: v.prefix, // Car usa prefix como ID
+                model: v.type ? v.type.model : "Desconhecido",
+                brand: v.type ? v.type.brand : "Desconhecido",
+                type: v.type ? v.type.category : "Desconhecido",
                 prefix: v.prefix,
                 licensePlate: v.licensePlate,
-                status: v.status || "Disponível"
+                status: v.vehicleStatus || "Disponível"
             }));
             veiculosFiltrados = [...veiculosAtuais];
             renderizarVeiculos(veiculosFiltrados);
@@ -121,6 +121,79 @@ async function carregarVeiculos() {
     renderizarVeiculos(veiculosFiltrados);
 }
 
+window.tiposVeiculosAtuais = [];
+
+async function carregarTiposVeiculos() {
+    try {
+        const response = await window.apiFetch("/vehicle/types", { method: "GET" });
+        if (response && response.ok) {
+            const data = await response.json();
+            window.tiposVeiculosAtuais = data;
+            renderizarTiposVeiculos(window.tiposVeiculosAtuais);
+        }
+    } catch (error) {
+        console.warn("Backend indisponível para carregar tipos de veículos.", error);
+    }
+}
+
+function renderizarTiposVeiculos(lista) {
+    const corpo = document.getElementById("tiposVeiculosTabelaCorpo");
+    if (!corpo) return;
+
+    if (!lista || lista.length === 0) {
+        corpo.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align:center; padding: 32px 0; color: #4a5c7f;">Nenhum tipo de veículo encontrado.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    corpo.innerHTML = lista.map(tipo => {
+        return `
+            <tr>
+                <td>${tipo.id}</td>
+                <td>${tipo.brand || '-'}</td>
+                <td>${tipo.model || '-'}</td>
+                <td>${tipo.year || '-'}</td>
+                <td>${tipo.category || '-'}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+window.alternarAbaVeiculos = function(aba) {
+    const btnVeiculos = document.getElementById("btnAbaVeiculos");
+    const btnTipos = document.getElementById("btnAbaTipos");
+    const tabVeiculos = document.getElementById("tabVeiculos");
+    const tabTipos = document.getElementById("tabTipos");
+
+    if (!btnVeiculos || !btnTipos || !tabVeiculos || !tabTipos) return;
+
+    if (aba === 'veiculos') {
+        btnVeiculos.classList.add("aba-ativa");
+        btnVeiculos.classList.remove("aba-inativa");
+        btnTipos.classList.remove("aba-ativa");
+        btnTipos.classList.add("aba-inativa");
+        
+        tabVeiculos.style.display = "block";
+        tabTipos.style.display = "none";
+    } else {
+        btnTipos.classList.add("aba-ativa");
+        btnTipos.classList.remove("aba-inativa");
+        btnVeiculos.classList.remove("aba-ativa");
+        btnVeiculos.classList.add("aba-inativa");
+        
+        tabTipos.style.display = "block";
+        tabVeiculos.style.display = "none";
+        
+        if (window.tiposVeiculosAtuais.length === 0) {
+            carregarTiposVeiculos();
+        }
+    }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     carregarVeiculos();
+    carregarTiposVeiculos();
 });

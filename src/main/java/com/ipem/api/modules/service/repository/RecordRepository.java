@@ -13,4 +13,7 @@ public interface RecordRepository extends JpaRepository<Record, Long> {
     List<Record> findByServiceIdAndIsActiveTrueOrderByRecordDateAsc(@org.springframework.data.repository.query.Param("serviceId") Long serviceId);
 
     List<Record> findByServiceIdAndRecordTypeAndIsActiveTrue(Long serviceId, RecordType type);
+
+    @Query("SELECT r FROM Record r WHERE r.recordDate BETWEEN :start AND :end AND r.isActive = true ORDER BY r.recordDate DESC")
+    List<Record> findByRecordDateBetweenAndIsActiveTrue(@org.springframework.data.repository.query.Param("start") java.time.LocalDateTime start, @org.springframework.data.repository.query.Param("end") java.time.LocalDateTime end);
 }

@@ -31,4 +31,7 @@ public interface RefuelingRepository extends JpaRepository<Refueling, Long> {
     ORDER BY rec.recordDate DESC
 """)
     List<Refueling> findByServiceId(@Param("serviceId") Long serviceId);
+
+    @Query("SELECT r FROM Refueling r JOIN r.record rec WHERE rec.recordDate BETWEEN :start AND :end AND r.isActive = true AND rec.isActive = true ORDER BY rec.recordDate DESC")
+    List<Refueling> findByRecordDateBetweenAndIsActiveTrue(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
 }

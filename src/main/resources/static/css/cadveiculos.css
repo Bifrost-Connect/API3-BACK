@@ -355,6 +355,13 @@ body {
     outline: none;
 }
 
+.input[readonly],
+.input:disabled {
+    color: #888888;
+    opacity: 1;
+    -webkit-text-fill-color: #888888;
+}
+
 label {
     color: #999;
     font-size: 15px;
@@ -370,7 +377,8 @@ label {
 }
 
 .input:focus~label,
-.input:valid~label {
+.input:valid~label,
+.input[value]:not([value=""])~label {
     top: -20px;
     font-size: 14px;
     color: #5264AE;
@@ -383,14 +391,16 @@ label {
     gap: 20px;
 }
 
-select.input {
-    appearance: none;
-    background-color: transparent;
-    cursor: pointer;
+select.input option {
+    font-size: 16px;
+    padding: 8px 12px;
+    color: #333;
+    background-color: #fff;
 }
 
 .input:focus ~ label,
 .input:valid ~ label,
+.input[value]:not([value=""]) ~ label,
 select.input:not([value=""]) ~ label {
     top: -20px;
     font-size: 14px;
@@ -408,7 +418,13 @@ select.input {
     background-color: transparent;
     cursor: pointer;
     width: 200px;
-    height: 40px; /* Altura padronizada */
+    height: 40px;
+    padding-right: 5px;
+    border-bottom: 1px solid #515151;
+    transition: border-color 0.2s;
+}
+select.input:hover, select.input:focus {
+    border-bottom: 2px solid #5264AE;
 }
 
 select.input:focus ~ label,

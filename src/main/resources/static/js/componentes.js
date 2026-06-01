@@ -66,11 +66,20 @@ window.renderizarSidebarGestor = function () {
                 <a href="telainicial-gestor.html">TELA INICIAL GESTOR</a>
                 <a href="telainicial.html">SELECIONAR VEÍCULO</a>
                 <a href="chamados.html">SELECIONAR CHAMADOS</a>
-                <a href="veiculos-gestor.html">GERENCIAR VEÍCULOS</a>
                 <a href="tela-mapa-gestor.html">GERENCIAR CHAMADOS</a>
-                <a href="tecnicos-gestor.html">GERENCIAR TÉCNICOS</a>
                 <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
                 <a href="relatorios.html">RELATÓRIOS</a>
+                
+                <div class="sidebar-submenu-container">
+                    <button id="btn-cadastro" class="sidebar-item-expandavel" type="button" aria-expanded="false">
+                        <span class="sidebar-item-label">GERENCIAMENTO</span>
+                        <span class="sidebar-item-icon">&#9662;</span>
+                    </button>
+                    <div id="submenu-cadastro" class="sidebar-submenu">
+                        <a href="veiculos-gestor.html" class="submenu-item">Gerenciar veículos</a>
+                        <a href="tecnicos-gestor.html" class="submenu-item">Gerenciar usuários</a>
+                    </div>
+                </div>     
                 
                 <div class="sidebar-submenu-container">
                     <button id="btn-cadastro" class="sidebar-item-expandavel" type="button" aria-expanded="false">

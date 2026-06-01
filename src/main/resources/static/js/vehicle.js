@@ -20,14 +20,16 @@ const traduzirCategoria = (cat) => {
 
 // Busca os modelos (Tipos de Carro) cadastrados para preencher o <select>
 async function carregarTiposVeiculo() {
-    const selectTipo = document.getElementById("cad-tipo");
+    const selectTipo = document.getElementById("cad-tipo-selecionado");
     if (!selectTipo) return;
 
     try {
         const response = await apiFetch("/vehicle/types");
         if (response && response.ok) {
             const tipos = await response.json();
-            selectTipo.innerHTML = '<option value="" disabled selected>Selecione um modelo...</option>';
+            window.tiposCarregados = tipos; // Salva para uso futuro
+            
+            selectTipo.innerHTML = '<option value="">Novo Tipo (Preencher manualmente)</option>';
 
             tipos.forEach(tipo => {
                 const categoriaPt = traduzirCategoria(tipo.category);
@@ -37,11 +39,65 @@ async function carregarTiposVeiculo() {
                 selectTipo.appendChild(option);
             });
         } else {
-            selectTipo.innerHTML = '<option value="" disabled>Erro ao carregar tipos.</option>';
+            selectTipo.innerHTML = '<option value="">Erro ao carregar tipos.</option>';
         }
     } catch (error) {
         console.error("Erro ao carregar tipos de veículo:", error);
-        if (selectTipo) selectTipo.innerHTML = '<option value="" disabled>Servidor offline.</option>';
+        if (selectTipo) selectTipo.innerHTML = '<option value="">Servidor offline.</option>';
+    }
+}
+
+window.aoMudarTipoVeiculo = function() {
+    const selectTipo = document.getElementById("cad-tipo-selecionado");
+    const inputMarca = document.getElementById("cad-marca");
+    const inputModelo = document.getElementById("cad-modelo");
+    const inputAno = document.getElementById("cad-ano");
+    const selectCategoria = document.getElementById("cad-categoria");
+    
+    if (!selectTipo || !inputMarca || !inputModelo || !inputAno || !selectCategoria) return;
+    
+    const idSelecionado = selectTipo.value;
+    
+    if (idSelecionado) {
+        // Encontrou um tipo existente
+        const tipo = window.tiposCarregados?.find(t => t.id == idSelecionado);
+        if (tipo) {
+            inputMarca.value = tipo.brand || "";
+            inputMarca.setAttribute("value", tipo.brand || "");
+            
+            inputModelo.value = tipo.model || "";
+            inputModelo.setAttribute("value", tipo.model || "");
+            
+            inputAno.value = tipo.year || "";
+            inputAno.setAttribute("value", tipo.year || "");
+            
+            const catLower = tipo.category ? tipo.category.toLowerCase() : "passenger";
+            selectCategoria.value = catLower;
+            selectCategoria.setAttribute("value", catLower);
+            
+            inputMarca.setAttribute("readonly", true);
+            inputModelo.setAttribute("readonly", true);
+            inputAno.setAttribute("readonly", true);
+            selectCategoria.setAttribute("disabled", true);
+        }
+    } else {
+        // Novo Tipo
+        inputMarca.value = "";
+        inputMarca.removeAttribute("value");
+        
+        inputModelo.value = "";
+        inputModelo.removeAttribute("value");
+        
+        inputAno.value = "";
+        inputAno.removeAttribute("value");
+        
+        selectCategoria.value = "passenger";
+        selectCategoria.setAttribute("value", "passenger");
+        
+        inputMarca.removeAttribute("readonly");
+        inputModelo.removeAttribute("readonly");
+        inputAno.removeAttribute("readonly");
+        selectCategoria.removeAttribute("disabled");
     }
 }
 
@@ -50,11 +106,28 @@ window.cadastrarVeiculo = async function () {
     const prefixo = document.getElementById("cad-prefixo")?.value;
     const placa = document.getElementById("cad-placa")?.value;
     const cor = document.getElementById("cad-cor")?.value;
-    const tipoId = document.getElementById("cad-tipo")?.value;
+    
+    const tipoSelecionado = document.getElementById("cad-tipo-selecionado")?.value;
+    const marca = document.getElementById("cad-marca")?.value;
+    const modelo = document.getElementById("cad-modelo")?.value;
+    const ano = document.getElementById("cad-ano")?.value;
+    const categoria = document.getElementById("cad-categoria")?.value;
 
-    if (!prefixo || !placa || !tipoId) {
-        window.mostrarToast("Por favor, preencha o Prefixo, Placa e selecione o Modelo.");
+    if (!prefixo || !placa || (!tipoSelecionado && (!marca || !modelo || !ano))) {
+        window.mostrarToast("Por favor, preencha o Prefixo, Placa e as informações do Modelo.");
         return;
+    }
+
+    let payloadType = {};
+    if (tipoSelecionado) {
+        payloadType = { id: parseInt(tipoSelecionado) };
+    } else {
+        payloadType = {
+            brand: marca.trim(),
+            model: modelo.trim(),
+            year: parseInt(ano),
+            category: categoria
+        };
     }
 
     const payload = {
@@ -63,7 +136,7 @@ window.cadastrarVeiculo = async function () {
         color: cor || "Não informada",
         available: true,
         currentKm: 0.0,
-        type: { id: parseInt(tipoId) }
+        type: payloadType
     };
 
     try {
@@ -95,10 +168,16 @@ window.cadastrarVeiculo = async function () {
 };
 
 function limparFormulario() {
-    ["cad-prefixo", "cad-placa", "cad-cor", "cad-tipo"].forEach(id => {
+    ["cad-prefixo", "cad-placa", "cad-cor", "cad-marca", "cad-modelo", "cad-ano"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
     });
+    
+    const selectTipo = document.getElementById("cad-tipo-selecionado");
+    if (selectTipo) {
+        selectTipo.value = "";
+        window.aoMudarTipoVeiculo();
+    }
 }
 
 // ===================================================================
@@ -220,6 +299,10 @@ window.confirmarVeiculo = () => {
 
     const modalDet = document.getElementById("modalDetalhesVeiculo");
     if (modalDet) modalDet.style.display = "none";
+    
+    if (typeof window.atualizarPainelChamadoAtual === "function") {
+        window.atualizarPainelChamadoAtual();
+    }
 };
 
 // ===================================================================
@@ -266,7 +349,7 @@ window.filtrarVeiculos = () => aplicarFiltros();
 // ===================================================================
 document.addEventListener("DOMContentLoaded", () => {
     // Carrega dados base dependendo de qual tela o usuário está
-    if (document.getElementById("cad-tipo")) carregarTiposVeiculo();
+    if (document.getElementById("cad-tipo-selecionado")) carregarTiposVeiculo();
     if (document.getElementById("listaVeiculos")) carregarVeiculosDisponiveis();
 
     // Configuração dos botões de cadastro (Tela do Gestor)

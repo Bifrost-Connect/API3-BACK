@@ -466,7 +466,6 @@ function renderizarChamados() {
             <div class="item-info">
                 <p><small><strong>CEP:</strong> ${chamado.cep || "Não informado"}</small></p>
                 <p><small><strong>Serviço:</strong> ${chamado.tipoServico}</small></p>
-                <p><small><strong>Técnico:</strong> ${chamado.tecnico}</small></p>
             </div>
             <div class="item-acoes">
                 <button class="btn-detalhe" onclick="window.abrirDetalhesChamado(${chamado.id})">Detalhes</button>
@@ -501,10 +500,12 @@ window.abrirDetalhesChamado = function (id) {
         <p><strong>CEP:</strong> ${chamado.cep || "Não informado"}</p>
         <p><strong>Tipo de Serviço:</strong> ${chamado.tipoServico}</p>
         <p><strong>Tipo de CNH (Requisitada):</strong> ${chamado.tipoCNH}</p>
-        <p><strong>Técnico Responsável:</strong> ${chamado.tecnico}</p>
+        ${chamado.tecnico && chamado.tecnico !== "Não atribuído" ? `<p><strong>Técnico Responsável:</strong> ${chamado.tecnico}</p>` : ``}
         <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
         <p><strong>Status Atual:</strong> ${formatarStatus(chamado.status)}</p>
         <p><strong>Data de Criação:</strong> ${chamado.dataCriacao}</p>
+        <button onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')" class="btn-confirmar">Aceitar Chamado</button>
+        <button onclick="window.fecharModalDetalhes()" style="margin-left:5px;">Voltar</button>
     `;
 
     document.getElementById("modalTitulo").textContent = `Chamado - ${chamado.endereco}`;

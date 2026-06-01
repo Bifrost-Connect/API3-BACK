@@ -380,4 +380,120 @@ public class DashboardService {
         }
         return reports;
     }
+
+    public List<com.ipem.api.modules.service.dto.ServiceReportEntryDTO> getServiceReportsByDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        var formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        var services = serviceRepository.findAllHistoricalByDepartureTime(start, end);
+        var entries = new java.util.ArrayList<com.ipem.api.modules.service.dto.ServiceReportEntryDTO>();
+
+        for (var s : services) {
+            String statusStr;
+            if (s.getCompletionTime() != null) {
+                statusStr = "Finalizado";
+            } else if (s.getArrivalTime() == null) {
+                statusStr = "Em andamento";
+            } else {
+                statusStr = "Em aberto";
+            }
+
+            java.util.List<com.ipem.api.modules.service.model.Refueling> abastecimentos =
+                    refuelingRepository.findByServiceId(s.getId());
+
+            String refuelingInfo = abastecimentos.isEmpty()
+                    ? "-"
+                    : abastecimentos.stream()
+                    .map(ref -> String.format(
+                            "Litros: %s | Preço/L: R$ %.2f | Total: R$ %.2f | NF: %s | Combustível: %s | Posto: %s",
+                            ref.getLiters() != null ? ref.getLiters() : "-",
+                            ref.getPricePerLiter() != null ? ref.getPricePerLiter() : 0.0,
+                            ref.getTotalAmount() != null ? ref.getTotalAmount() : 0.0,
+                            ref.getInvoice() != null ? ref.getInvoice() : "-",
+                            ref.getFuelType() != null ? ref.getFuelType().name() : "-",
+                            ref.getGasStationName() != null ? ref.getGasStationName() : "-"
+                    ))
+                    .reduce((a, b) -> a + " || " + b)
+                    .orElse("-");
+
+            entries.add(new com.ipem.api.modules.service.dto.ServiceReportEntryDTO(
+                    s.getId(),
+                    s.getCar() != null ? s.getCar().getPrefix() : "-",
+                    s.getUser() != null ? s.getUser().getRegistration() : "-",
+                    s.getUser() != null ? s.getUser().getName() : "-",
+                    s.getDescription(),
+                    s.getDepartureTime() != null ? formatter.format(s.getDepartureTime()) : "-",
+                    s.getArrivalTime() != null ? formatter.format(s.getArrivalTime()) : "-",
+                    s.getCompletionTime() != null ? formatter.format(s.getCompletionTime()) : "-",
+                    statusStr,
+                    s.getDepartureKm(),
+                    s.getArrivalKm(),
+                    s.getDestinationRequester(),
+                    refuelingInfo
+            ));
+        }
+        return entries;
+    }
+
+    public List<com.ipem.api.modules.service.dto.RefuelingReportDTO> getRefuelingReportsByDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        List<Refueling> refuelings = refuelingRepository.findByRecordDateBetweenAndIsActiveTrue(start, end);
+        
+        return refuelings.stream().map(refueling -> {
+            String carPrefix = refueling.getRecord() != null && refueling.getRecord().getService() != null && refueling.getRecord().getService().getCar() != null 
+                    ? refueling.getRecord().getService().getCar().getPrefix() : "-";
+            String technicianName = refueling.getRecord() != null && refueling.getRecord().getService() != null && refueling.getRecord().getService().getUser() != null 
+                    ? refueling.getRecord().getService().getUser().getName() : "-";
+            String date = refueling.getRecord() != null && refueling.getRecord().getRecordDate() != null 
+                    ? refueling.getRecord().getRecordDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "-";
+            
+            return com.ipem.api.modules.service.dto.RefuelingReportDTO.builder()
+                    .id(refueling.getRecordId())
+                    .carPrefix(carPrefix)
+                    .technicianName(technicianName)
+                    .date(date)
+                    .gasStationName(refueling.getGasStationName() != null ? refueling.getGasStationName() : "-")
+                    .liters(refueling.getLiters() != null ? refueling.getLiters() : 0.0f)
+                    .totalAmount(refueling.getTotalAmount() != null ? String.format("R$ %.2f", refueling.getTotalAmount()) : "R$ 0,00")
+                    .pricePerLiter(refueling.getPricePerLiter() != null ? String.format("R$ %.2f", refueling.getPricePerLiter()) : "R$ 0,00")
+                    .build();
+        }).toList();
+    }
+
+    public List<com.ipem.api.modules.service.dto.IncidentReportDTO> getIncidentReportsByDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        List<Incident> incidents = incidentRepository.findByCreatedAtBetweenAndIsActiveTrue(start, end);
+        
+        return incidents.stream().map(incident -> {
+            String carPrefix = incident.getService() != null && incident.getService().getCar() != null ? incident.getService().getCar().getPrefix() : "-";
+            String technicianName = incident.getService() != null && incident.getService().getUser() != null ? incident.getService().getUser().getName() : "-";
+            String date = incident.getCreatedAt() != null ? incident.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "-";
+            
+            return com.ipem.api.modules.service.dto.IncidentReportDTO.builder()
+                    .id(incident.getId())
+                    .carPrefix(carPrefix)
+                    .technicianName(technicianName)
+                    .incidentType(incident.getIncidentType() != null ? incident.getIncidentType().name() : "-")
+                    .severity(incident.getSeverity() != null ? incident.getSeverity().name() : "-")
+                    .description(incident.getDescription() != null ? incident.getDescription() : "-")
+                    .date(date)
+                    .status(incident.getResolved() != null && incident.getResolved() ? "Resolvido" : "Aberto")
+                    .build();
+        }).toList();
+    }
+
+    public List<com.ipem.api.modules.service.dto.ExpenseReportDTO> getExpenseReportsByDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        List<Record> records = recordRepository.findByRecordDateBetweenAndIsActiveTrue(start, end);
+        
+        return records.stream().map(record -> {
+            String carPrefix = record.getService() != null && record.getService().getCar() != null ? record.getService().getCar().getPrefix() : "-";
+            String technicianName = record.getService() != null && record.getService().getUser() != null ? record.getService().getUser().getName() : "-";
+            String date = record.getRecordDate() != null ? record.getRecordDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "-";
+            
+            return com.ipem.api.modules.service.dto.ExpenseReportDTO.builder()
+                    .id(record.getId())
+                    .carPrefix(carPrefix)
+                    .technicianName(technicianName)
+                    .expenseType(record.getRecordType() != null ? record.getRecordType().name() : "Desconhecido")
+                    .date(date)
+                    .note(record.getNote() != null && !record.getNote().isEmpty() ? record.getNote() : "-")
+                    .build();
+        }).toList();
+    }
 }

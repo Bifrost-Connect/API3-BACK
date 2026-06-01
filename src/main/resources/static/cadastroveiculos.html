@@ -16,27 +16,39 @@
     <div class="chamado-card">
       <h2 class="chamado-titulo">CADASTRO DE VEÍCULOS:</h2>
 
+      <div class="grupo-centralizado" style="width: 100%; display: flex; justify-content: center; margin-top: 25px; margin-bottom: 15px;">
+        <div class="group" style="width: 100%; max-width: 400px;">
+          <select id="cad-tipo-selecionado" class="input" style="width: 100%; max-width: 100%;" onchange="aoMudarTipoVeiculo()">
+            <option value="">Novo Tipo (Preencher manualmente)</option>
+          </select>
+          <label>Selecionar Categoria do Carro:</label>
+        </div>
+      </div>
+
       <div class="chamado-conteudo">
         <div class="coluna">
           <div class="group">
-            <input required type="text" class="input" />
+            <input id="cad-marca" required type="text" class="input" />
             <label>Marca:</label>
           </div>
           <div class="group">
-            <input required type="text" class="input" />
+            <input id="cad-modelo" required type="text" class="input" />
             <label>Modelo:</label>
           </div>
           <div class="group">
-            <input required type="number" class="input" />
+            <input id="cad-ano" required type="number" class="input" />
             <label>Ano:</label>
+          </div>
+          <div class="group">
+            <select id="cad-categoria" required class="input">
+              <option value="passenger">Passeio</option>
+              <option value="utility">Utilitário</option>
+            </select>
+            <label>Categoria:</label>
           </div>
           <div class="group">
             <input id="cad-cor" required type="text" class="input" />
             <label>Cor:</label>
-          </div>
-          <div class="group">
-            <select id="cad-tipo" required class="input" value=""></select>
-            <label>Tipo:</label>
           </div>
         </div>
 

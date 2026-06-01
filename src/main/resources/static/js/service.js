@@ -60,7 +60,16 @@ window.salvarVeiculoInfo = async function () {
             // Salva o ID do serviço gerado pelo Backend (necessário para o check-out/abastecimento)
             const idServico = data.serviceId || data.id;
             localStorage.setItem("activeServiceId", idServico);
+            
+            if (localStorage.getItem("chamadoPendenteId")) {
+                const endPend = localStorage.getItem("chamadoPendenteEndereco");
+                if (endPend) localStorage.setItem("chamadoAtivoEndereco", endPend);
+            } else {
+                localStorage.removeItem("chamadoAtivoEndereco");
+            }
+            
             localStorage.removeItem("chamadoPendenteId");
+            localStorage.removeItem("chamadoPendenteEndereco");
 
             // Guarda o KM inicial para validação contra fraudes/erros no momento do Check-out
             localStorage.setItem("km", kmInput);
@@ -129,6 +138,7 @@ window.checkoutChamado = async () => {
             localStorage.removeItem("km");
             localStorage.removeItem("obs");
             localStorage.removeItem("activeServiceId");
+            localStorage.removeItem("chamadoAtivoEndereco");
 
             // Aciona o novo modal de sucesso da interface mockada
             const modalNovo = document.getElementById("modalAvisoCheckout");
@@ -245,25 +255,54 @@ window.carregarChamadosDisponiveis = async function() {
         if (response && response.ok) {
             const chamados = await response.json();
 
+            const activeServiceId = localStorage.getItem("activeServiceId");
+            const chamadoPendenteId = localStorage.getItem("chamadoPendenteId");
+
+            const isAtivo = activeServiceId && activeServiceId !== "null" && activeServiceId !== "undefined";
+            const isPendente = chamadoPendenteId && chamadoPendenteId !== "null" && chamadoPendenteId !== "undefined";
+
+            if (isAtivo || isPendente) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+
             if (chamados.length === 0) {
                 container.innerHTML = `<p style="text-align: center; color: #666;">Nenhum chamado disponível no momento.</p>`;
                 return;
             }
 
             container.innerHTML = "";
+            window.chamadosDisponiveis = chamados;
 
             chamados.forEach(chamado => {
+                const isTelaChamados = window.location.pathname.includes('chamados.html');
+                const lat = chamado.latitude ?? chamado.lat;
+                const lng = chamado.longitude ?? chamado.lng;
+                
+                const btnMapaHtml = (isTelaChamados && lat !== undefined && lng !== undefined) ? 
+                    `<button class="btn-mapa-card" onclick="window.focarNoMapa(${lat}, ${lng})">Ver no mapa</button>` : '';
+
+                const statusStr = chamado.status || "novo";
+                const dataFormatada = chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data';
+
                 const card = `
-                    <div class="chamado-card">
-                        <h2 class="chamado-titulo">Serviço #${chamado.id} - ${chamado.tipoServico || 'Novo'}</h2>
-                        <div class="chamado-conteudo">
-                            <p><strong>Endereço:</strong> ${chamado.endereco || 'Não informado'}</p>
-                            <p><strong>Observações:</strong> ${chamado.observacoes || 'Sem descrição'}</p>
-                            <p><strong>Criado em:</strong> ${chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data'}</p>
+                    <div class="item-chamado status-${statusStr}">
+                        <div class="item-header">
+                            <strong>${chamado.endereco || 'Endereço não informado'}</strong>
+                            <span class="status-badge status-${statusStr}">${statusStr.charAt(0).toUpperCase() + statusStr.slice(1)}</span>
                         </div>
-                        <button class="btn-aceitar" onclick="prepararAceiteChamado(${chamado.id})">
-                            Aceitar chamado
-                        </button>
+                        <div class="item-info">
+                            <p><small><strong>Serviço:</strong> ${chamado.tipoServico || 'Novo'}</small></p>
+                            <p><small><strong>Observações:</strong> ${chamado.observacoes || 'Sem descrição'}</small></p>
+                            <p><small><strong>Criado em:</strong> ${dataFormatada}</small></p>
+                        </div>
+                        <div class="item-acoes">
+                            <button class="btn-detalhe" onclick="window.abrirDetalhesChamado(${chamado.id})">Detalhes</button>
+
+                            ${btnMapaHtml}
+                        </div>
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', card);
@@ -323,16 +362,118 @@ window.cancelarVeiculoInfo = function () {
     if (containerCheckinBotao) containerCheckinBotao.style.display = 'block';
 
     localStorage.removeItem("selectedVehicle");
+    
+    if (typeof window.atualizarPainelChamadoAtual === "function") {
+        window.atualizarPainelChamadoAtual();
+    }
 };
 
-window.prepararAceiteChamado = function(idChamado) {
+window.prepararAceiteChamado = function(idChamado, endereco) {
     localStorage.setItem("chamadoPendenteId", idChamado);
+    if (endereco) {
+        localStorage.setItem("chamadoPendenteEndereco", endereco);
+    }
 
-    if(typeof abrirModalConfirmacao === "function") {
-        abrirModalConfirmacao();
+    if (typeof window.atualizarPainelChamadoAtual === "function") {
+        window.atualizarPainelChamadoAtual();
+    }
+
+    // Refresh tickets to hide them since one was accepted
+    carregarChamadosDisponiveis();
+    window.fecharModalDetalhes();
+}
+
+window.atualizarPainelChamadoAtual = function() {
+    const infoChamado = document.getElementById("info-chamado");
+    if (!infoChamado) return;
+
+    const activeServiceId = localStorage.getItem("activeServiceId");
+    const chamadoPendenteId = localStorage.getItem("chamadoPendenteId");
+    const chamadoPendenteEndereco = localStorage.getItem("chamadoPendenteEndereco");
+    const selectedVehicle = localStorage.getItem("selectedVehicle");
+
+    const isAtivoValid = activeServiceId && activeServiceId !== "null" && activeServiceId !== "undefined";
+    const isPendenteValid = chamadoPendenteId && chamadoPendenteId !== "null" && chamadoPendenteId !== "undefined";
+
+    if (isAtivoValid) {
+        infoChamado.style.display = 'block';
+        const endereco = localStorage.getItem("chamadoAtivoEndereco");
+        if (endereco && endereco !== "undefined") {
+             infoChamado.innerHTML = `<p style="color: #28a745;"><strong>Em atendimento:</strong></p><p>${endereco}</p>`;
+        } else {
+             infoChamado.innerHTML = `<p style="color: #ff9800;"><strong>Serviço Avulso (Ativo)</strong></p><p>Viatura em uso sem chamado vinculado.</p>`;
+        }
+    } else if (selectedVehicle) {
+        infoChamado.style.display = 'block';
+        if (isPendenteValid) {
+            infoChamado.innerHTML = `<p style="color: #002080;"><strong>Check-in Pendente:</strong></p><p>${chamadoPendenteEndereco}</p>`;
+        } else {
+            infoChamado.innerHTML = `<p style="color: #ff9800;"><strong>Check-in Avulso Pendente</strong></p><p>Você pegou um carro sem aceitar chamado.</p>`;
+        }
+    } else {
+        if (isPendenteValid) {
+             infoChamado.style.display = 'block';
+             infoChamado.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <p style="color: #002080; margin-bottom: 4px;"><strong>Aguardando Veículo:</strong></p>
+                        <p style="font-size: 15px;">${chamadoPendenteEndereco}</p>
+                    </div>
+                    <button onclick="window.cancelarAceiteChamado()" style="background: none; border: none; color: #dc3545; cursor: pointer; text-decoration: underline; font-size: 13px;">Cancelar</button>
+                </div>
+             `;
+        } else {
+             infoChamado.style.display = 'none';
+             infoChamado.innerHTML = ``;
+        }
     }
 }
 
+window.cancelarAceiteChamado = function() {
+    localStorage.removeItem("chamadoPendenteId");
+    localStorage.removeItem("chamadoPendenteEndereco");
+    if (typeof window.atualizarPainelChamadoAtual === "function") {
+        window.atualizarPainelChamadoAtual();
+    }
+    carregarChamadosDisponiveis();
+};
+
+window.abrirDetalhesChamado = function (id) {
+    if (!window.chamadosDisponiveis) return;
+    const chamado = window.chamadosDisponiveis.find((item) => item.id === id);
+    if (!chamado) return;
+
+    const infoChamado = document.getElementById("info-chamado");
+    if (!infoChamado) return;
+
+    const dataFormatada = chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data';
+
+    infoChamado.style.display = 'block';
+    infoChamado.innerHTML = `
+        <div style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <h4 style="margin-top: 0;">Detalhes do Chamado</h4>
+            <p><strong>Endereço:</strong> ${chamado.endereco || "Não informado"}</p>
+            <p><strong>Tipo:</strong> ${chamado.tipoServico || "Não informado"}</p>
+            <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
+            <p><strong>Criado em:</strong> ${dataFormatada}</p>
+            <button onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')" class="btn-confirmar">Aceitar Chamado</button>
+            <button onclick="window.atualizarPainelChamadoAtual()" style="margin-left: 5px;">Voltar</button>
+        </div>
+    `;
+
+    if (tituloEl) tituloEl.textContent = `Chamado - ${chamado.endereco || "Sem endereço"}`;
+    if (conteudoEl) conteudoEl.innerHTML = conteudo;
+    if (modalEl) modalEl.style.display = "flex";
+};
+
+window.fecharModalDetalhes = function () {
+    const modal = document.getElementById("modalDetalheChamado");
+    if (modal) modal.style.display = "none";
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     carregarChamadosDisponiveis();
+    if (typeof window.atualizarPainelChamadoAtual === "function") {
+        window.atualizarPainelChamadoAtual();
+    }
 });

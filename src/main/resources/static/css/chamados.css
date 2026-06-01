@@ -196,33 +196,6 @@ body {
     backdrop-filter: blur(2px);
 }
 
-.chamado-card {
-    background-color: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    flex: 1;
-    min-width: 0;
-    animation: slideIn 0.3s ease-out;
-}
-
-.chamado-titulo {
-    color: #002080;
-    font-size: 28px;
-    margin-bottom: 20px;
-    font-weight: bold;
-}
-
-.chamado-conteudo {
-    color: #333;
-    font-size: 20px;
-    line-height: 1.6;
-    margin-bottom: 25px;
-}
-
-.chamado-conteudo p {
-    margin-bottom: 10px;
-}
 
 /* Modal/Caracteristicas ds Popups */
 .popup-card {
@@ -344,24 +317,14 @@ body {
 .btn-voltar {
     flex: 1;
     padding: 12px;
-    background-color: #cccccc;
-    color: #333;
+    background: #e7ebf5;
+    color: #3b4b68;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .btn-voltar:hover {
-    background-color: #999999;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.btn-voltar:active {
-    transform: translateY(0);
+    background: #d8deed;
 }
 
 #toast-aviso {
@@ -484,20 +447,17 @@ body {
 }
 
 @media (max-width: 560px) {
-    .chamado-card,
     .popup-card,
     .mapa-card {
         padding: 18px 16px;
         border-radius: 18px;
     }
 
-    .chamado-titulo,
     .popup-titulo,
     .mapa-titulo {
         font-size: 22px;
     }
 
-    .chamado-conteudo,
     .popup-conteudo {
         font-size: 16px;
     }

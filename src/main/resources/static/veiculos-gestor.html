@@ -27,27 +27,51 @@
                 </div>
             </div>
 
-            <section class="tecnicos-filtro-panel">
-                <div class="filtro-busca">
-                    <input id="filtroBuscaVeiculo" type="text" class="filtro-busca-input"
-                        placeholder="Digite modelo, marca, prefixo ou placa">
-                </div>
-            </section>
+            <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e0e6ed; padding-bottom: 10px;">
+                <button id="btnAbaVeiculos" class="aba-ativa" onclick="alternarAbaVeiculos('veiculos')" style="background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #002080; border-bottom: 2px solid #002080; padding: 5px 10px;">Frota de Veículos</button>
+                <button id="btnAbaTipos" class="aba-inativa" onclick="alternarAbaVeiculos('tipos')" style="background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #4a5c7f; padding: 5px 10px;">Tipos de Veículos</button>
+            </div>
 
-            <div class="tecnicos-table-wrapper">
-                <table class="tecnicos-table">
-                    <thead>
-                        <tr>
-                            <th>Modelo</th>
-                            <th>Marca</th>
-                            <th>Prefixo</th>
-                            <th>Placa</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="veiculosTabelaCorpo"></tbody>
-                </table>
+            <div id="tabVeiculos" style="display: block;">
+                <section class="tecnicos-filtro-panel">
+                    <div class="filtro-busca">
+                        <input id="filtroBuscaVeiculo" type="text" class="filtro-busca-input"
+                            placeholder="Digite modelo, marca, prefixo ou placa">
+                    </div>
+                </section>
+
+                <div class="tecnicos-table-wrapper">
+                    <table class="tecnicos-table">
+                        <thead>
+                            <tr>
+                                <th>Modelo</th>
+                                <th>Marca</th>
+                                <th>Prefixo</th>
+                                <th>Placa</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="veiculosTabelaCorpo"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tabTipos" style="display: none;">
+                <div class="tecnicos-table-wrapper">
+                    <table class="tecnicos-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Ano</th>
+                                <th>Categoria</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tiposVeiculosTabelaCorpo"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>

@@ -18,37 +18,47 @@ function abrirPopupExportacao(tipo) {
     const titulo = document.getElementById("popupExportacaoTitulo");
     const subtitulo = document.getElementById("popupExportacaoSubtitulo");
     const listaItens = document.getElementById("listaExportacaoItens");
-    const tecnicos = typeof tecnicosFiltrados !== 'undefined' ? tecnicosFiltrados : (typeof tecnicosAtuais !== 'undefined' ? tecnicosAtuais : exportacaoDefaultTecnicos);
-    const veiculos = typeof veiculosFiltrados !== 'undefined' ? veiculosFiltrados : (typeof veiculosAtuais !== 'undefined' ? veiculosAtuais : exportacaoDefaultVeiculos);
-    const itens = isTecnicos ? tecnicos : veiculos;
+    // Usar os dados da tabela filtrados se possível, senão os atuais
+    let itens = [];
+    if (isTecnicos) {
+        itens = (typeof window.tecnicosAtuais !== 'undefined' && window.tecnicosAtuais.length > 0) ? window.tecnicosAtuais : exportacaoDefaultTecnicos;
+    } else {
+        itens = (typeof window.veiculosAtuais !== 'undefined' && window.veiculosAtuais.length > 0) ? window.veiculosAtuais : exportacaoDefaultVeiculos;
+    }
 
     if (titulo) titulo.textContent = isTecnicos ? "Exportar técnicos" : "Exportar veículos";
-    if (subtitulo) subtitulo.textContent = isTecnicos ? "Selecione os técnicos que deseja exportar" : "Selecione os veículos que deseja exportar";
+    if (subtitulo) subtitulo.textContent = isTecnicos ? "Selecione os itens que deseja exportar" : "Selecione os itens que deseja exportar";
 
     if (listaItens) {
         if (!itens || itens.length === 0) {
-            listaItens.innerHTML = `<div class="popup-list-empty">Nenhum item disponível para exportação.</div>`;
+            listaItens.innerHTML = `<div class="popup-list-empty" style="text-align: center; padding: 20px; color: #4a5c7f;">Nenhum item disponível para exportação.</div>`;
         } else {
             listaItens.innerHTML = itens.map(item => {
                 if (isTecnicos) {
+                    const idParaExportacao = item.registration || item.id;
+                    const nome = item.name || "Técnico sem nome";
                     return `
-            <label class="exportacao-lista-item">
-                <input type="checkbox" name="exportar-tecnico" value="${item.id}">
-                <span>${item.name} — ${item.registration}</span>
+            <label class="exportacao-lista-item" style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; background: #ffffff; border: 1px solid rgba(0, 32, 128, 0.12); cursor: pointer; width: 100%; box-sizing: border-box; position: relative;">
+                <input type="checkbox" name="exportar-tecnico" value="${idParaExportacao}" style="width: 18px; height: 18px; flex-shrink: 0; cursor: pointer;">
+                <span style="font-size: 14px; color: #12255c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${nome} — ${idParaExportacao}</span>
             </label>`;
                 }
 
                 return `
-            <label class="exportacao-lista-item">
-                <input type="checkbox" name="exportar-veiculo" value="${item.id}">
-                <span>${item.model} — ${item.prefix} — ${item.licensePlate}</span>
+            <label class="exportacao-lista-item" style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; background: #ffffff; border: 1px solid rgba(0, 32, 128, 0.12); cursor: pointer; width: 100%; box-sizing: border-box; position: relative;">
+                <input type="checkbox" name="exportar-veiculo" value="${item.id}" style="width: 18px; height: 18px; flex-shrink: 0; cursor: pointer;">
+                <span style="font-size: 14px; color: #12255c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${item.model} — ${item.prefix} — ${item.licensePlate}</span>
             </label>`;
             }).join("");
         }
     }
 
     const popup = document.getElementById("popupExportacao");
-    if (popup) popup.style.display = "flex";
+    if (popup) {
+        popup.style.display = "flex";
+        popup.style.alignItems = "center";
+        popup.style.justifyContent = "center";
+    }
 }
 
 function selecionarTodosExportacao() {
@@ -87,7 +97,7 @@ function exportarXmlSelecionados() {
     const checkboxes = Array.from(document.querySelectorAll(`input[name="${isTecnicos ? 'exportar-tecnico' : 'exportar-veiculo'}"]:checked`));
     const tecnicos = typeof tecnicosFiltrados !== 'undefined' ? tecnicosFiltrados : (typeof tecnicosAtuais !== 'undefined' ? tecnicosAtuais : exportacaoDefaultTecnicos);
     const veiculos = typeof veiculosFiltrados !== 'undefined' ? veiculosFiltrados : (typeof veiculosAtuais !== 'undefined' ? veiculosAtuais : exportacaoDefaultVeiculos);
-    const itens = isTecnicos ? tecnicos.filter(item => checkboxes.some(cb => cb.value == item.id)) : veiculos.filter(item => checkboxes.some(cb => cb.value == item.id));
+    const itens = isTecnicos ? tecnicos.filter(item => checkboxes.some(cb => cb.value == item.id || cb.value == item.registration)) : veiculos.filter(item => checkboxes.some(cb => cb.value == item.id));
 
     if (itens.length === 0) {
         mostrarToast(isTecnicos ? "Selecione ao menos um técnico para exportar." : "Selecione ao menos um veículo para exportar.");
@@ -126,7 +136,7 @@ function gerarCsvExportacao(tipo, itens) {
     if (tipo === 'tecnicos') {
         const cabecalho = ['ID', 'Nome', 'Matrícula', 'E-mail', 'Telefone', 'Setor', 'Perfil', 'Status'];
         const linhas = itens.map(tecnico => [
-            tecnico.id,
+            tecnico.registration || tecnico.id,
             tecnico.name,
             tecnico.registration,
             tecnico.email,
@@ -174,7 +184,7 @@ function gerarXmlExportacao(tipo, itens) {
     if (tipo === 'tecnicos') {
         const tecnicosXml = itens.map(tecnico => `
         <tecnico>
-            <id>${tecnico.id}</id>
+            <id>${tecnico.registration || tecnico.id}</id>
             <nome>${tecnico.name}</nome>
             <matricula>${tecnico.registration}</matricula>
             <email>${tecnico.email}</email>

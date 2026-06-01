@@ -33,6 +33,9 @@ window.inicializarMapaChamados = function() {
         zoom: 13,
         scrollWheelZoom: true
     });
+    
+    // Salva a instância do mapa globalmente para permitir navegação externa (ex: botão Ver no Mapa)
+    window.mapaMonitoramento = map;
 
     // Injeta os tiles (imagens de renderização de ruas) do OpenStreetMap com seus respectivos créditos
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -58,7 +61,7 @@ window.inicializarMapaChamados = function() {
 async function carregarChamadosDaAPITecnico(map) {
     try {
         // Consome a rota usando o barramento padrão do basic.js (com injeção automática de token JWT)
-        const response = await window.apiFetch("/chamado/todos", { method: "GET" });
+        const response = await window.apiFetch("/service/pending", { method: "GET" });
 
         if (response && response.ok) {
             const data = await response.json();
@@ -185,3 +188,23 @@ document.addEventListener("DOMContentLoaded", () => {
         window.inicializarMapaChamados();
     }
 });
+
+/**
+ * Função: focarNoMapa (Global)
+ * O que faz: Recebe coordenadas e move a câmera do mapa com zoom aproximado
+ * focado no marcador do chamado específico.
+ */
+window.focarNoMapa = function(lat, lng) {
+    if (window.mapaMonitoramento) {
+        // Usa setView para centralizar na coordenada com zoom 17 e animação suave
+        window.mapaMonitoramento.setView([lat, lng], 17, { animate: true, duration: 0.8 });
+        
+        // Faz um pequeno scroll suave para garantir que o mapa esteja visível na tela
+        const mapaContainer = document.getElementById("mapaChamados");
+        if (mapaContainer) {
+            mapaContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } else {
+        console.warn("O mapa ainda não foi inicializado.");
+    }
+};
