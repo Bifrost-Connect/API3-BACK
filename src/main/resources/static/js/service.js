@@ -244,8 +244,9 @@ window.registrarAbastecimento = async function () {
 
 window.carregarChamadosDisponiveis = async function() {
     const container = document.getElementById("lista-chamados-container");
-
     if (!container) return;
+
+    const quadroDireito = container.closest(".quadro-direito");
 
     try {
         const response = await window.apiFetch("/service/pending", {
@@ -262,10 +263,12 @@ window.carregarChamadosDisponiveis = async function() {
             const isPendente = chamadoPendenteId && chamadoPendenteId !== "null" && chamadoPendenteId !== "undefined";
 
             if (isAtivo || isPendente) {
+                if (quadroDireito) quadroDireito.style.display = 'none';
                 container.style.display = 'none';
                 return;
             }
 
+            if (quadroDireito) quadroDireito.style.display = 'block';
             container.style.display = 'block';
 
             if (chamados.length === 0) {
@@ -443,27 +446,34 @@ window.abrirDetalhesChamado = function (id) {
     const chamado = window.chamadosDisponiveis.find((item) => item.id === id);
     if (!chamado) return;
 
-    const infoChamado = document.getElementById("info-chamado");
-    if (!infoChamado) return;
+    const modal = document.getElementById("modalDetalheChamado");
+    const titulo = document.getElementById("modalTitulo");
+    const conteudo = document.getElementById("modalConteudo");
+
+    if (!modal || !conteudo) return;
 
     const dataFormatada = chamado.dataCriacao ? new Date(chamado.dataCriacao).toLocaleDateString('pt-BR') : 'Sem data';
 
-    infoChamado.style.display = 'block';
-    infoChamado.innerHTML = `
-        <div style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <h4 style="margin-top: 0;">Detalhes do Chamado</h4>
-            <p><strong>Endereço:</strong> ${chamado.endereco || "Não informado"}</p>
-            <p><strong>Tipo:</strong> ${chamado.tipoServico || "Não informado"}</p>
-            <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
-            <p><strong>Criado em:</strong> ${dataFormatada}</p>
-            <button onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')" class="btn-confirmar">Aceitar Chamado</button>
-            <button onclick="window.atualizarPainelChamadoAtual()" style="margin-left: 5px;">Voltar</button>
-        </div>
+    if (titulo) {
+        titulo.textContent = `Chamado - ${chamado.tipoServico || "Detalhes"}`;
+    }
+
+    conteudo.innerHTML = `
+        <p><strong>Endereço:</strong> ${chamado.endereco || "Não informado"}</p>
+        <p><strong>Tipo de Serviço:</strong> ${chamado.tipoServico || "Não informado"}</p>
+        <p><strong>Observações:</strong> ${chamado.observacoes || "Nenhuma"}</p>
+        <p><strong>Criado em:</strong> ${dataFormatada}</p>
     `;
 
-    if (tituloEl) tituloEl.textContent = `Chamado - ${chamado.endereco || "Sem endereço"}`;
-    if (conteudoEl) conteudoEl.innerHTML = conteudo;
-    if (modalEl) modalEl.style.display = "flex";
+    const popupButtons = modal.querySelector(".popup-buttons");
+    if (popupButtons) {
+        popupButtons.innerHTML = `
+            <button class="btn-voltar" onclick="window.fecharModalDetalhes()">Recusar</button>
+            <button class="btn-aceitar" onclick="window.prepararAceiteChamado(${chamado.id}, '${chamado.endereco || 'Chamado'}')">Aceitar</button>
+        `;
+    }
+
+    modal.style.display = "flex";
 };
 
 window.fecharModalDetalhes = function () {
